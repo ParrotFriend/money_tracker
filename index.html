@@ -562,12 +562,8 @@
 
         // Service Worker Registration
         async function registerServiceWorker() {
-    if ("serviceWorker" in navigator) {
-        try {
-            await navigator.serviceWorker.register("./sw.js");
-            console.log("Service Worker Registered");
-        } catch (err) {
-            console.error(err);
+   if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js");
         }
     }
 }
