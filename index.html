@@ -3,439 +3,417 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1a1a1a">
+    <meta name="theme-color" content="#111318">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Money Tracker</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
         :root {
-            --bg-primary: #111318;
-            --bg-secondary: #1e2128;
-            --bg-tertiary: #2a2d35;
-            --bg-input: #252830;
-            --text-primary: #f1f3f5;
-            --text-secondary: #868e96;
-            --text-muted: #555c66;
-            --accent: #10b981;
-            --accent-dim: rgba(16,185,129,0.12);
-            --danger: #ef4444;
-            --danger-dim: rgba(239,68,68,0.12);
-            --warning: #f59e0b;
-            --warning-dim: rgba(245,158,11,0.12);
-            --info: #3b82f6;
-            --info-dim: rgba(59,130,246,0.12);
-            --success: #10b981;
-            --border: #2a2d35;
-            --radius: 10px;
-            --radius-sm: 7px;
+            --bg:       #111318;
+            --card:     #1c1f27;
+            --input:    #232730;
+            --border:   #2c303a;
+            --accent:   #10b981;
+            --red:      #ef4444;
+            --yellow:   #f59e0b;
+            --blue:     #3b82f6;
+            --t1:       #f1f3f5;
+            --t2:       #8a919e;
+            --t3:       #4a5060;
+            --r:        10px;
+            --rs:       8px;
         }
 
         html, body {
             height: 100%;
-            overflow: hidden;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            background: var(--bg);
+            color: var(--t1);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             font-size: 14px;
+            overflow: hidden;
         }
 
+        /* ── APP SHELL ── */
         .app {
             display: flex;
             flex-direction: column;
-            height: 100dvh; /* dynamic viewport height */
-            max-width: 480px;
-            margin: 0 auto;
+            height: 100dvh;
         }
 
         /* ── HEADER ── */
         .header {
-            background: var(--bg-secondary);
-            padding: 12px 16px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: var(--card);
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            z-index: 10;
         }
 
-        .header h1 {
+        .header-left { display: flex; align-items: center; gap: 10px; }
+
+        .menu-btn {
+            width: 36px; height: 36px;
+            background: var(--input);
+            border: none;
+            border-radius: var(--rs);
+            cursor: pointer;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 4px;
+        }
+
+        .menu-btn span {
+            display: block;
+            width: 16px; height: 2px;
+            background: var(--t2);
+            border-radius: 2px;
+            transition: all 0.25s;
+        }
+
+        .page-title {
             font-size: 15px;
             font-weight: 700;
-            letter-spacing: -0.3px;
+            color: var(--t1);
         }
 
-        .header-btn {
-            background: var(--bg-tertiary);
+        .acc-btn {
+            background: var(--input);
             border: none;
-            color: var(--text-secondary);
-            padding: 6px 12px;
-            border-radius: var(--radius-sm);
+            color: var(--t2);
+            padding: 7px 12px;
+            border-radius: var(--rs);
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
-            width: auto;
         }
 
-        /* ── SCROLLABLE CONTENT ── */
+        /* ── SLIDE-IN MENU ── */
+        .menu-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 50;
+        }
+        .menu-overlay.open { display: block; }
+
+        .menu-drawer {
+            position: fixed;
+            top: 0; left: 0;
+            width: 72%;
+            max-width: 260px;
+            height: 100%;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            z-index: 51;
+            transform: translateX(-100%);
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+            display: flex;
+            flex-direction: column;
+            padding-top: env(safe-area-inset-top, 0px);
+        }
+        .menu-drawer.open { transform: translateX(0); }
+
+        .menu-head {
+            padding: 20px 18px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .menu-head h2 { font-size: 17px; font-weight: 800; }
+        .menu-head p  { font-size: 11px; color: var(--t3); margin-top: 2px; }
+
+        .menu-nav { flex: 1; padding: 10px 10px; overflow-y: auto; }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 12px;
+            border-radius: var(--rs);
+            cursor: pointer;
+            margin-bottom: 2px;
+            transition: background 0.15s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            color: var(--t2);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .menu-item:active, .menu-item.active {
+            background: rgba(16,185,129,0.1);
+            color: var(--accent);
+        }
+
+        .menu-item .mi-icon {
+            font-size: 20px;
+            width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .menu-item .mi-label { font-size: 13px; font-weight: 600; }
+        .menu-item .mi-sub   { font-size: 10px; color: var(--t3); }
+
+        .menu-item.active .mi-sub { color: rgba(16,185,129,0.6); }
+
+        .menu-footer {
+            padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+            border-top: 1px solid var(--border);
+        }
+
+        .menu-acc-btn {
+            width: 100%;
+            padding: 10px;
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.2);
+            color: var(--accent);
+            border-radius: var(--rs);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* ── PAGE CONTENT ── */
         .content {
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            padding: 14px 14px 8px;
+            padding: 14px 14px 20px;
         }
 
-        /* ── BOTTOM TABS ── */
-        .tabs {
-            display: flex;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            flex-shrink: 0;
-            padding-bottom: env(safe-area-inset-bottom, 0px);
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* ── BALANCE CARD ── */
+        .balance-card {
+            background: linear-gradient(135deg, #162a20 0%, #1c1f27 60%);
+            border: 1px solid rgba(16,185,129,0.2);
+            border-radius: var(--r);
+            padding: 20px 18px;
+            margin-bottom: 14px;
+            text-align: center;
         }
 
-        .tab-btn {
-            flex: 1;
+        .balance-label {
+            font-size: 10px; font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase; letter-spacing: 0.8px;
+            margin-bottom: 6px;
+        }
+
+        .balance-amount {
+            font-size: 32px; font-weight: 800;
+            color: var(--t1); letter-spacing: -1.5px;
+        }
+
+        .account-card {
+            background: var(--card);
+            border-radius: var(--rs);
+            padding: 12px 14px;
+            margin-bottom: 8px;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            gap: 2px;
-            padding: 8px 4px 6px;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 9px;
-            font-weight: 500;
-            border-top: 2px solid transparent;
-            transition: color 0.2s;
-            width: auto;
+            border-left: 3px solid var(--accent);
         }
 
-        .tab-btn .tab-icon { font-size: 17px; line-height: 1; }
-        .tab-btn.active { color: var(--accent); border-top-color: var(--accent); }
-
-        /* ── TAB CONTENT ── */
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .account-card .ac-name { font-size: 13px; font-weight: 600; }
+        .account-card .ac-bal  { font-size: 16px; font-weight: 800; color: var(--accent); }
 
         /* ── FORM ── */
         .form-group { margin-bottom: 10px; }
 
         label {
             display: block;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
+            font-size: 10px; font-weight: 700;
+            color: var(--t3);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 5px;
         }
 
-        input, select, textarea {
+        input[type=text], input[type=number], input[type=date], select {
             width: 100%;
-            padding: 9px 11px;
-            background: var(--bg-input);
+            padding: 10px 12px;
+            background: var(--input);
             border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
+            border-radius: var(--rs);
+            color: var(--t1);
             font-size: 14px;
             font-family: inherit;
             -webkit-appearance: none;
             appearance: none;
         }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
 
         select {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23868e96' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238a919e' d='M5 7L0 2h10z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 10px center;
-            padding-right: 28px;
+            background-position: right 12px center;
+            padding-right: 30px;
         }
 
         .add-btn {
-            width: 100%;
-            padding: 11px;
+            width: 100%; padding: 12px;
             background: var(--accent);
             color: #fff;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 4px;
-            letter-spacing: 0.2px;
+            border: none; border-radius: var(--rs);
+            font-size: 14px; font-weight: 700;
+            cursor: pointer; margin-top: 4px;
         }
 
-        .add-btn:active { background: #059669; }
+        .add-btn:active { filter: brightness(0.88); }
 
-        /* ── SECTION LABEL ── */
         .section-label {
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin: 14px 0 7px;
+            font-size: 10px; font-weight: 700;
+            color: var(--t3);
+            text-transform: uppercase; letter-spacing: 0.6px;
+            margin: 16px 0 8px;
         }
 
-        /* ── TRANSACTION ROW ── */
+        /* ── TX ROW ── */
         .tx-row {
             display: flex;
             align-items: center;
-            gap: 7px;
-            background: var(--bg-secondary);
-            padding: 8px 10px;
-            border-radius: var(--radius-sm);
+            gap: 8px;
+            background: var(--card);
+            padding: 9px 11px;
+            border-radius: var(--rs);
             margin-bottom: 5px;
             border-left: 3px solid var(--accent);
         }
 
-        .tx-row.expense  { border-left-color: var(--danger); }
-        .tx-row.income   { border-left-color: var(--success); }
-        .tx-row.transfer { border-left-color: var(--info); }
-        .tx-row.payable-paid   { border-left-color: var(--success); }
-        .tx-row.payable-unpaid { border-left-color: var(--warning); }
+        .tx-row.expense        { border-left-color: var(--red); }
+        .tx-row.income         { border-left-color: var(--accent); }
+        .tx-row.transfer       { border-left-color: var(--blue); }
+        .tx-row.payable-unpaid { border-left-color: var(--yellow); }
+        .tx-row.payable-paid   { border-left-color: var(--accent); }
 
         .tx-date {
-            font-size: 10px;
-            color: var(--text-muted);
-            white-space: nowrap;
-            min-width: 52px;
+            font-size: 10px; color: var(--t3);
+            white-space: nowrap; min-width: 50px;
         }
 
-        .tx-mid {
-            flex: 1;
-            overflow: hidden;
-            min-width: 0;
-        }
+        .tx-mid { flex: 1; overflow: hidden; min-width: 0; }
 
-        .tx-account {
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.3;
+        .tx-acc {
+            font-size: 12px; font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
         .tx-desc {
-            font-size: 10px;
-            color: var(--text-secondary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.3;
+            font-size: 10px; color: var(--t2);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-top: 1px;
         }
 
         .tx-right {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-            flex-shrink: 0;
+            display: flex; flex-direction: column;
+            align-items: flex-end; gap: 5px; flex-shrink: 0;
         }
 
-        .tx-amount {
-            font-size: 13px;
-            font-weight: 700;
-            white-space: nowrap;
+        .tx-amt { font-size: 13px; font-weight: 800; white-space: nowrap; }
+        .tx-amt.expense  { color: var(--red); }
+        .tx-amt.income   { color: var(--accent); }
+        .tx-amt.transfer { color: var(--blue); }
+
+        .tx-btns { display: flex; gap: 4px; }
+
+        .txb {
+            padding: 3px 7px; font-size: 11px; font-weight: 700;
+            border: none; border-radius: 5px; cursor: pointer; width: auto;
         }
 
-        .tx-amount.expense  { color: var(--danger); }
-        .tx-amount.income   { color: var(--success); }
-        .tx-amount.transfer { color: var(--info); }
+        .txb.edit  { background: rgba(138,145,158,0.15); color: var(--t2); }
+        .txb.del   { background: rgba(239,68,68,0.12);   color: var(--red); }
+        .txb.pay   { background: rgba(245,158,11,0.12);  color: var(--yellow); }
+        .txb.unpay { background: rgba(138,145,158,0.12); color: var(--t3); }
 
-        .tx-actions { display: flex; gap: 4px; }
-
-        .tx-btn {
-            padding: 3px 7px;
-            font-size: 11px;
-            font-weight: 600;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            width: auto;
-        }
-
-        .tx-btn.edit   { background: var(--bg-tertiary); color: var(--text-secondary); }
-        .tx-btn.del    { background: var(--danger-dim); color: var(--danger); }
-        .tx-btn.pay    { background: var(--warning-dim); color: var(--warning); }
-        .tx-btn.unpay  { background: var(--bg-tertiary); color: var(--text-secondary); }
-
-        /* payable badge */
         .tx-badge {
-            font-size: 9px;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+            font-size: 9px; font-weight: 700;
+            padding: 2px 6px; border-radius: 4px;
+            text-transform: uppercase; letter-spacing: 0.3px;
         }
+        .tx-badge.paid   { background: rgba(16,185,129,0.12); color: var(--accent); }
+        .tx-badge.unpaid { background: rgba(245,158,11,0.12); color: var(--yellow); }
 
-        .tx-badge.paid   { background: var(--accent-dim); color: var(--success); }
-        .tx-badge.unpaid { background: var(--warning-dim); color: var(--warning); }
-
-        /* show-all */
-        .show-all-btn {
-            width: 100%;
-            background: none;
+        .show-more-btn {
+            width: 100%; background: none;
             border: 1px dashed var(--border);
-            color: var(--text-muted);
-            font-size: 11px;
-            padding: 7px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            margin-top: 4px;
-            font-weight: 500;
+            color: var(--t3); font-size: 11px;
+            padding: 8px; border-radius: var(--rs);
+            cursor: pointer; margin-top: 3px; font-weight: 500;
         }
-
-        .show-all-btn:active { background: var(--bg-tertiary); }
-
-        /* ── SUMMARY ── */
-        .balance-card {
-            background: linear-gradient(135deg, #1a2e25 0%, #1e2128 100%);
-            border: 1px solid rgba(16,185,129,0.2);
-            border-radius: var(--radius);
-            padding: 18px 16px;
-            text-align: center;
-            margin-bottom: 14px;
-        }
-
-        .balance-label {
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-bottom: 4px;
-        }
-
-        .balance-amount {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--text-primary);
-            letter-spacing: -1px;
-        }
-
-        .account-card {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-sm);
-            padding: 11px 13px;
-            margin-bottom: 7px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 3px solid var(--accent);
-        }
-
-        .account-card .name {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .account-card .bal {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        /* ── MODAL ── */
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.65);
-            z-index: 100;
-            align-items: flex-end;
-            justify-content: center;
-        }
-
-        .modal.active { display: flex; }
-
-        .modal-sheet {
-            background: var(--bg-secondary);
-            border-radius: 16px 16px 0 0;
-            padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-            width: 100%;
-            max-width: 480px;
-            max-height: 92vh;
-            overflow-y: auto;
-        }
-
-        .modal-handle {
-            width: 36px;
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            margin: 0 auto 14px;
-        }
-
-        .modal-title {
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-close {
-            font-size: 18px;
-            color: var(--text-muted);
-            cursor: pointer;
-            line-height: 1;
-            background: none;
-            border: none;
-            width: auto;
-            padding: 0;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 14px;
-        }
-
-        .modal-actions button { flex: 1; padding: 11px; font-size: 13px; font-weight: 700; border-radius: var(--radius-sm); }
-
-        .btn-cancel { background: var(--bg-tertiary); color: var(--text-secondary); border: none; }
-        .btn-save   { background: var(--accent); color: #fff; border: none; }
-        .btn-danger { background: var(--danger); color: #fff; border: none; }
-
-        /* account list in modal */
-        .acc-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg-tertiary);
-            padding: 9px 11px;
-            border-radius: var(--radius-sm);
-            margin-bottom: 6px;
-        }
-
-        .acc-row .acc-info .acc-name { font-size: 13px; font-weight: 600; }
-        .acc-row .acc-info .acc-bal  { font-size: 12px; color: var(--accent); }
-        .acc-row-btns { display: flex; gap: 5px; }
-        .acc-row-btns button { width: auto; padding: 4px 9px; font-size: 11px; font-weight: 600; border-radius: 5px; border: none; cursor: pointer; }
 
         .empty-state {
             text-align: center;
-            padding: 24px 0 16px;
-            color: var(--text-muted);
-            font-size: 12px;
+            padding: 28px 0 16px;
+            color: var(--t3); font-size: 12px;
+        }
+        .empty-state .ei { font-size: 28px; margin-bottom: 6px; }
+
+        /* ── MODALS (bottom sheet) ── */
+        .modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 200;
+            align-items: flex-end; justify-content: center;
+        }
+        .modal.open { display: flex; }
+
+        .sheet {
+            background: var(--card);
+            border-radius: 18px 18px 0 0;
+            padding: 0 16px calc(20px + env(safe-area-inset-bottom,0px));
+            width: 100%; max-width: 480px;
+            max-height: 92vh; overflow-y: auto;
         }
 
-        .empty-state .ei { font-size: 28px; margin-bottom: 6px; }
+        .sheet-handle {
+            width: 36px; height: 4px;
+            background: var(--border); border-radius: 2px;
+            margin: 12px auto 14px;
+        }
+
+        .sheet-title {
+            font-size: 15px; font-weight: 700;
+            margin-bottom: 14px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .sheet-close {
+            font-size: 18px; color: var(--t3);
+            cursor: pointer; background: none; border: none; width: auto; padding: 0;
+        }
+
+        .sheet-actions {
+            display: flex; gap: 8px; margin-top: 14px;
+        }
+
+        .sheet-actions button { flex: 1; padding: 11px; font-size: 13px; font-weight: 700; border-radius: var(--rs); border: none; cursor: pointer; }
+        .btn-cancel { background: var(--input); color: var(--t2); }
+        .btn-save   { background: var(--accent); color: #fff; }
+
+        .acc-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--input); padding: 9px 11px;
+            border-radius: var(--rs); margin-bottom: 6px;
+        }
+        .acc-row .ar-name { font-size: 13px; font-weight: 600; }
+        .acc-row .ar-bal  { font-size: 12px; color: var(--accent); }
+        .acc-row-btns { display: flex; gap: 5px; }
+        .acc-row-btns button {
+            width: auto; padding: 4px 9px; font-size: 11px; font-weight: 600;
+            border-radius: 5px; border: none; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -443,15 +421,54 @@
 
     <!-- HEADER -->
     <div class="header">
-        <h1>💰 Money Tracker</h1>
-        <button class="header-btn" id="settingsBtn">⚙ Accounts</button>
+        <div class="header-left">
+            <button class="menu-btn" id="menuBtn" onclick="openMenu()">
+                <span></span><span></span><span></span>
+            </button>
+            <span class="page-title" id="pageTitle">📊 Summary</span>
+        </div>
+        <button class="acc-btn" onclick="openAccModal()">⚙ Accounts</button>
+    </div>
+
+    <!-- MENU OVERLAY + DRAWER -->
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+    <div class="menu-drawer" id="menuDrawer">
+        <div class="menu-head">
+            <h2>💰 Money Tracker</h2>
+            <p>Track your finances offline</p>
+        </div>
+        <nav class="menu-nav">
+            <button class="menu-item active" id="mi-summary" onclick="goTo('summary','📊 Summary')">
+                <span class="mi-icon">📊</span>
+                <div><div class="mi-label">Summary</div><div class="mi-sub">Balance overview</div></div>
+            </button>
+            <button class="menu-item" id="mi-expense" onclick="goTo('expense','💸 Expenses')">
+                <span class="mi-icon">💸</span>
+                <div><div class="mi-label">Expenses</div><div class="mi-sub">Record spending</div></div>
+            </button>
+            <button class="menu-item" id="mi-income" onclick="goTo('income','💵 Income')">
+                <span class="mi-icon">💵</span>
+                <div><div class="mi-label">Income</div><div class="mi-sub">Record earnings</div></div>
+            </button>
+            <button class="menu-item" id="mi-transfer" onclick="goTo('transfer','🔄 Transfer')">
+                <span class="mi-icon">🔄</span>
+                <div><div class="mi-label">Transfer</div><div class="mi-sub">Move between accounts</div></div>
+            </button>
+            <button class="menu-item" id="mi-payable" onclick="goTo('payable','📋 Payable')">
+                <span class="mi-icon">📋</span>
+                <div><div class="mi-label">Payable</div><div class="mi-sub">Track what you owe</div></div>
+            </button>
+        </nav>
+        <div class="menu-footer">
+            <button class="menu-acc-btn" onclick="closeMenu(); openAccModal();">⚙ Manage Accounts</button>
+        </div>
     </div>
 
     <!-- CONTENT -->
     <div class="content">
 
         <!-- Summary -->
-        <div id="summaryTab" class="tab-content active">
+        <div id="summaryPage" class="page active">
             <div class="balance-card">
                 <div class="balance-label">Total Balance</div>
                 <div class="balance-amount" id="totalBalance">₱0.00</div>
@@ -460,7 +477,7 @@
         </div>
 
         <!-- Expenses -->
-        <div id="expenseTab" class="tab-content">
+        <div id="expensePage" class="page">
             <div class="form-group">
                 <label>Date</label>
                 <input type="date" id="expenseDate">
@@ -470,7 +487,7 @@
                 <input type="number" id="expenseAmount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
             </div>
             <div class="form-group">
-                <label>Description <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(optional)</span></label>
+                <label>Description (optional)</label>
                 <input type="text" id="expenseDescription" placeholder="What did you spend on?">
             </div>
             <div class="form-group">
@@ -483,7 +500,7 @@
         </div>
 
         <!-- Income -->
-        <div id="incomeTab" class="tab-content">
+        <div id="incomePage" class="page">
             <div class="form-group">
                 <label>Date</label>
                 <input type="date" id="incomeDate">
@@ -493,7 +510,7 @@
                 <input type="number" id="incomeAmount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
             </div>
             <div class="form-group">
-                <label>Description <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(optional)</span></label>
+                <label>Description (optional)</label>
                 <input type="text" id="incomeDescription" placeholder="Where did this come from?">
             </div>
             <div class="form-group">
@@ -506,7 +523,7 @@
         </div>
 
         <!-- Transfer -->
-        <div id="transferTab" class="tab-content">
+        <div id="transferPage" class="page">
             <div class="form-group">
                 <label>Date</label>
                 <input type="date" id="transferDate">
@@ -524,11 +541,11 @@
                 <select id="transferTo"></select>
             </div>
             <div class="form-group">
-                <label>Transfer Fee <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(optional)</span></label>
+                <label>Transfer Fee (optional)</label>
                 <input type="number" id="transferFee" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
             </div>
             <div class="form-group">
-                <label>Notes <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(optional)</span></label>
+                <label>Notes (optional)</label>
                 <input type="text" id="transferDescription" placeholder="Transfer notes...">
             </div>
             <button class="add-btn" onclick="addTransfer()">+ Add Transfer</button>
@@ -537,7 +554,7 @@
         </div>
 
         <!-- Payable -->
-        <div id="payableTab" class="tab-content">
+        <div id="payablePage" class="page">
             <div class="form-group">
                 <label>Date</label>
                 <input type="date" id="payableDate">
@@ -556,59 +573,40 @@
         </div>
 
     </div>
-
-    <!-- BOTTOM TABS -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('summary',this)">
-            <span class="tab-icon">📊</span>Summary
-        </button>
-        <button class="tab-btn" onclick="switchTab('expense',this)">
-            <span class="tab-icon">💸</span>Expenses
-        </button>
-        <button class="tab-btn" onclick="switchTab('income',this)">
-            <span class="tab-icon">💵</span>Income
-        </button>
-        <button class="tab-btn" onclick="switchTab('transfer',this)">
-            <span class="tab-icon">🔄</span>Transfer
-        </button>
-        <button class="tab-btn" onclick="switchTab('payable',this)">
-            <span class="tab-icon">📋</span>Payable
-        </button>
-    </div>
 </div>
 
 <!-- ACCOUNTS MODAL -->
-<div id="accountModal" class="modal">
-    <div class="modal-sheet">
-        <div class="modal-handle"></div>
-        <div class="modal-title">
+<div id="accModal" class="modal">
+    <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">
             Manage Accounts
-            <button class="modal-close" onclick="closeAccountModal()">✕</button>
+            <button class="sheet-close" onclick="closeAccModal()">✕</button>
         </div>
         <div class="form-group">
             <label>Account Name</label>
-            <input type="text" id="newAccountName" placeholder="e.g. GCash, Cash, Bank">
+            <input type="text" id="newAccName" placeholder="e.g. GCash, Cash, Bank">
         </div>
         <div class="form-group">
             <label>Initial Amount</label>
-            <input type="number" id="newAccountAmount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+            <input type="number" id="newAccAmt" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
         </div>
         <button class="add-btn" onclick="addAccount()">+ Add Account</button>
         <div class="section-label" style="margin-top:14px;">Your Accounts</div>
-        <div id="editAccountsList"></div>
+        <div id="accModalList"></div>
     </div>
 </div>
 
 <!-- EDIT / PAY MODAL -->
 <div id="editModal" class="modal">
-    <div class="modal-sheet">
-        <div class="modal-handle"></div>
-        <div class="modal-title">
-            <span id="editModalTitle">Edit Transaction</span>
-            <button class="modal-close" onclick="closeEditModal()">✕</button>
+    <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">
+            <span id="editModalTitle">Edit</span>
+            <button class="sheet-close" onclick="closeEditModal()">✕</button>
         </div>
         <div id="editModalBody"></div>
-        <div class="modal-actions">
+        <div class="sheet-actions">
             <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
             <button class="btn-save"   onclick="saveEdit()">Save</button>
         </div>
@@ -616,96 +614,109 @@
 </div>
 
 <script>
+/* ── DATA ── */
 let data = { accounts:[], expenses:[], income:[], transfers:[], payables:[] };
-const STORAGE_KEY = 'moneyTrackerData_v2';
-let editContext = null;
+const KEY = 'mt_v3';
+let editCtx = null;
 const LIMIT = 5;
-const showAll = { expense:false, income:false, transfer:false, payable:false };
+const seeAll = { expense:false, income:false, transfer:false, payable:false };
+let currentPage = 'summary';
 
 /* ── INIT ── */
 function init() {
     loadData();
-    if (!data.accounts.length) openAccountModal();
+    if (!data.accounts.length) openAccModal();
     setDates();
     updateSelects();
     renderAll();
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 }
 
-function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
-function loadData()  { const s=localStorage.getItem(STORAGE_KEY); if(s) data=JSON.parse(s); }
+function saveData() { localStorage.setItem(KEY, JSON.stringify(data)); }
+function loadData()  { const s=localStorage.getItem(KEY); if(s) data=JSON.parse(s); }
+
+/* ── MENU ── */
+function openMenu() {
+    document.getElementById('menuOverlay').classList.add('open');
+    document.getElementById('menuDrawer').classList.add('open');
+}
+
+function closeMenu() {
+    document.getElementById('menuOverlay').classList.remove('open');
+    document.getElementById('menuDrawer').classList.remove('open');
+}
+
+function goTo(page, title) {
+    closeMenu();
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    document.getElementById(page+'Page').classList.add('active');
+    document.getElementById('mi-'+page).classList.add('active');
+    document.getElementById('pageTitle').textContent = title;
+    document.querySelector('.content').scrollTop = 0;
+    currentPage = page;
+}
 
 /* ── DATES ── */
 function setDates() {
     const t = new Date().toISOString().split('T')[0];
-    ['expenseDate','incomeDate','transferDate','payableDate'].forEach(id=>{
-        const el=document.getElementById(id); if(el) el.value=t;
+    ['expenseDate','incomeDate','transferDate','payableDate'].forEach(id => {
+        const el = document.getElementById(id); if(el) el.value = t;
     });
 }
 
-/* ── TABS ── */
-function switchTab(name, btn) {
-    document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
-    document.getElementById(name+'Tab').classList.add('active');
-    btn.classList.add('active');
-    // scroll content to top
-    document.querySelector('.content').scrollTop = 0;
-}
-
 /* ── ACCOUNTS ── */
-function openAccountModal()  { document.getElementById('accountModal').classList.add('active'); renderAccModal(); }
-function closeAccountModal() { document.getElementById('accountModal').classList.remove('active'); }
+function openAccModal()  { document.getElementById('accModal').classList.add('open'); renderAccList(); }
+function closeAccModal() { document.getElementById('accModal').classList.remove('open'); }
 
 function addAccount() {
-    const name = document.getElementById('newAccountName').value.trim();
-    const amt  = parseFloat(document.getElementById('newAccountAmount').value) || 0;
+    const name = document.getElementById('newAccName').value.trim();
+    const amt  = parseFloat(document.getElementById('newAccAmt').value) || 0;
     if (!name) { alert('Enter account name'); return; }
     data.accounts.push({ id:Date.now(), name, amount:amt });
-    document.getElementById('newAccountName').value='';
-    document.getElementById('newAccountAmount').value='';
-    saveData(); updateSelects(); renderAccModal(); renderAll();
+    document.getElementById('newAccName').value = '';
+    document.getElementById('newAccAmt').value = '';
+    saveData(); updateSelects(); renderAccList(); renderAll();
 }
 
 function deleteAccount(id) {
-    if(!confirm('Delete account?')) return;
-    data.accounts = data.accounts.filter(a=>a.id!==id);
-    saveData(); updateSelects(); renderAccModal(); renderAll();
+    if (!confirm('Delete account?')) return;
+    data.accounts = data.accounts.filter(a => a.id !== id);
+    saveData(); updateSelects(); renderAccList(); renderAll();
 }
 
 function editAccAmt(id) {
-    const acc = data.accounts.find(a=>a.id===id);
-    const v = prompt('New amount:', acc.amount);
-    if (v!==null) { acc.amount=parseFloat(v)||0; saveData(); updateSelects(); renderAccModal(); renderAll(); }
+    const a = data.accounts.find(a => a.id === id);
+    const v = prompt('New balance for '+a.name+':', a.amount);
+    if (v !== null) { a.amount = parseFloat(v)||0; saveData(); updateSelects(); renderAccList(); renderAll(); }
 }
 
-function renderAccModal() {
-    const c = document.getElementById('editAccountsList');
+function renderAccList() {
+    const c = document.getElementById('accModalList');
     if (!data.accounts.length) { c.innerHTML='<div class="empty-state"><div class="ei">🏦</div>No accounts yet</div>'; return; }
-    c.innerHTML = data.accounts.map(a=>`
+    c.innerHTML = data.accounts.map(a => `
         <div class="acc-row">
-            <div class="acc-info">
-                <div class="acc-name">${a.name}</div>
-                <div class="acc-bal">₱${a.amount.toFixed(2)}</div>
+            <div>
+                <div class="ar-name">${a.name}</div>
+                <div class="ar-bal">₱${a.amount.toFixed(2)}</div>
             </div>
             <div class="acc-row-btns">
-                <button style="background:var(--bg-secondary);color:var(--text-secondary);" onclick="editAccAmt(${a.id})">Edit</button>
-                <button style="background:var(--danger-dim);color:var(--danger);" onclick="deleteAccount(${a.id})">Del</button>
+                <button style="background:rgba(138,145,158,0.15);color:var(--t2);" onclick="editAccAmt(${a.id})">Edit</button>
+                <button style="background:rgba(239,68,68,0.12);color:var(--red);" onclick="deleteAccount(${a.id})">Del</button>
             </div>
         </div>`).join('');
 }
 
 function updateSelects() {
-    const opts = data.accounts.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
-    ['expenseAccount','incomeAccount','transferFrom','transferTo'].forEach(id=>{
-        const el=document.getElementById(id); if(el) el.innerHTML=opts;
+    const opts = data.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    ['expenseAccount','incomeAccount','transferFrom','transferTo'].forEach(id => {
+        const el = document.getElementById(id); if(el) el.innerHTML = opts;
     });
 }
 
-/* ── FORMAT DATE ── */
+/* ── DATE FORMAT ── */
 function fd(d) {
-    const dt=new Date(d+'T00:00:00');
-    return dt.toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+    return new Date(d+'T00:00:00').toLocaleDateString('en-PH',{month:'short',day:'numeric'});
 }
 
 /* ── RENDER LIST ── */
@@ -716,74 +727,67 @@ function renderList(cid, items, type) {
         return;
     }
     const sorted = [...items].sort((a,b)=>new Date(b.date)-new Date(a.date));
-    const vis = showAll[type] ? sorted : sorted.slice(0, LIMIT);
-    let html = vis.map(item=>txRow(item,type)).join('');
+    const vis = seeAll[type] ? sorted : sorted.slice(0,LIMIT);
+    let html = vis.map(item => buildRow(item,type)).join('');
     if (sorted.length > LIMIT) {
-        html += showAll[type]
-            ? `<button class="show-all-btn" onclick="toggleAll('${type}')">Show less ▴</button>`
-            : `<button class="show-all-btn" onclick="toggleAll('${type}')">Show all ${sorted.length} records ▾</button>`;
+        html += seeAll[type]
+            ? `<button class="show-more-btn" onclick="toggleAll('${type}')">Show less ▴</button>`
+            : `<button class="show-more-btn" onclick="toggleAll('${type}')">Show all ${sorted.length} ▾</button>`;
     }
-    c.innerHTML=html;
+    c.innerHTML = html;
 }
 
-function toggleAll(type) { showAll[type]=!showAll[type]; renderAll(); }
+function toggleAll(type) { seeAll[type]=!seeAll[type]; renderAll(); }
 
-function txRow(item, type) {
-    let dateStr='', accStr='', descStr='', amtStr='', amtClass='', extra='', btns='';
+function buildRow(item, type) {
+    let dateStr='', accStr='', descStr='', amtStr='', amtClass='', badge='', payBtn='';
 
     dateStr = fd(item.date);
 
     if (type==='expense') {
-        const acc=data.accounts.find(a=>a.id===item.accountId);
-        accStr=acc?acc.name:'—';
-        descStr=item.description||'';
-        amtStr=`-₱${item.amount.toFixed(2)}`;
-        amtClass='expense';
+        const a=data.accounts.find(a=>a.id===item.accountId);
+        accStr=a?a.name:'—'; descStr=item.description||'';
+        amtStr=`-₱${item.amount.toFixed(2)}`; amtClass='expense';
     } else if (type==='income') {
-        const acc=data.accounts.find(a=>a.id===item.accountId);
-        accStr=acc?acc.name:'—';
-        descStr=item.description||'';
-        amtStr=`+₱${item.amount.toFixed(2)}`;
-        amtClass='income';
+        const a=data.accounts.find(a=>a.id===item.accountId);
+        accStr=a?a.name:'—'; descStr=item.description||'';
+        amtStr=`+₱${item.amount.toFixed(2)}`; amtClass='income';
     } else if (type==='transfer') {
         const fr=data.accounts.find(a=>a.id===item.fromId);
         const to=data.accounts.find(a=>a.id===item.toId);
         accStr=`${fr?fr.name:'?'} → ${to?to.name:'?'}`;
         descStr=item.description||(item.fee>0?`Fee ₱${item.fee.toFixed(2)}`:'');
-        amtStr=`₱${item.amount.toFixed(2)}`;
-        amtClass='transfer';
+        amtStr=`₱${item.amount.toFixed(2)}`; amtClass='transfer';
     } else if (type==='payable') {
-        const pacc=item.paid?data.accounts.find(a=>a.id===item.paidAccountId):null;
-        accStr=pacc?pacc.name:'—';
-        descStr=item.description||'';
+        const pa=item.paid?data.accounts.find(a=>a.id===item.paidAccountId):null;
+        accStr=pa?pa.name:'—'; descStr=item.description||'';
         amtStr=`₱${item.amount.toFixed(2)}`;
-        extra=`<span class="tx-badge ${item.paid?'paid':'unpaid'}">${item.paid?'Paid':'Unpaid'}</span>`;
+        badge=`<span class="tx-badge ${item.paid?'paid':'unpaid'}">${item.paid?'Paid':'Unpaid'}</span>`;
+        payBtn = item.paid
+            ? `<button class="txb unpay" onclick="markPaid(${item.id})">↩</button>`
+            : `<button class="txb pay"   onclick="markPaid(${item.id})">✓</button>`;
     }
-
-    if (type==='payable') {
-        btns = item.paid
-            ? `<button class="tx-btn unpay" onclick="markPaid(${item.id})">↩</button>`
-            : `<button class="tx-btn pay"   onclick="markPaid(${item.id})">✓ Pay</button>`;
-    }
-    btns += `<button class="tx-btn edit" onclick="openEdit('${type}',${item.id})">✏</button>`;
-    btns += `<button class="tx-btn del"  onclick="delRecord('${type}',${item.id})">🗑</button>`;
 
     return `
     <div class="tx-row ${type==='payable'?(item.paid?'payable-paid':'payable-unpaid'):type}">
         <div class="tx-date">${dateStr}</div>
         <div class="tx-mid">
-            <div class="tx-account">${accStr}</div>
+            <div class="tx-acc">${accStr}</div>
             ${descStr?`<div class="tx-desc">${descStr}</div>`:''}
         </div>
-        ${extra}
+        ${badge}
         <div class="tx-right">
-            <span class="tx-amount ${amtClass}">${amtStr}</span>
-            <div class="tx-actions">${btns}</div>
+            <span class="tx-amt ${amtClass}">${amtStr}</span>
+            <div class="tx-btns">
+                ${payBtn}
+                <button class="txb edit" onclick="openEdit('${type}',${item.id})">✏</button>
+                <button class="txb del"  onclick="delRecord('${type}',${item.id})">🗑</button>
+            </div>
         </div>
     </div>`;
 }
 
-/* ── ADD FUNCTIONS ── */
+/* ── ADD ── */
 function addExpense() {
     const date=document.getElementById('expenseDate').value;
     const amt=parseFloat(document.getElementById('expenseAmount').value);
@@ -823,11 +827,11 @@ function addTransfer() {
     const desc=document.getElementById('transferDescription').value.trim();
     if (!date||!amt||amt<=0){alert('Fill required fields');return;}
     if (fromId===toId){alert('Cannot transfer to same account');return;}
-    const fromAcc=data.accounts.find(a=>a.id===fromId);
-    if (fromAcc.amount<(amt+fee)){alert('Insufficient balance in '+fromAcc.name);return;}
+    const fa=data.accounts.find(a=>a.id===fromId);
+    if (fa.amount<(amt+fee)){alert('Insufficient balance in '+fa.name);return;}
     const tid=Date.now();
     data.transfers.push({id:tid,date,amount:amt,fromId,toId,fee,description:desc});
-    fromAcc.amount-=(amt+fee);
+    fa.amount-=(amt+fee);
     data.accounts.find(a=>a.id===toId).amount+=amt;
     if (fee>0) data.expenses.push({id:tid+1,date,amount:fee,description:'Transfer fee',accountId:fromId});
     saveData();
@@ -891,22 +895,21 @@ function markPaid(id) {
         p.paid=false; p.paidDate=null; p.paidAccountId=null;
         saveData(); renderAll();
     } else {
-        // open pay modal
-        editContext={type:'pay',id};
+        editCtx={type:'pay',id};
         const opts=data.accounts.map(a=>`<option value="${a.id}">${a.name} — ₱${a.amount.toFixed(2)}</option>`).join('');
         document.getElementById('editModalTitle').textContent='Mark as Paid';
         document.getElementById('editModalBody').innerHTML=`
-            <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
-                Paying <strong style="color:var(--text-primary);">₱${p.amount.toFixed(2)}</strong> for "${p.description}"
+            <p style="font-size:12px;color:var(--t2);margin-bottom:10px;">
+                Paying <strong style="color:var(--t1)">₱${p.amount.toFixed(2)}</strong> for "${p.description}"
             </p>
-            <div class="form-group"><label>Pay from Account</label><select id="payAccSelect">${opts}</select></div>`;
-        document.getElementById('editModal').classList.add('active');
+            <div class="form-group"><label>Pay from Account</label><select id="payAccSel">${opts}</select></div>`;
+        document.getElementById('editModal').classList.add('open');
     }
 }
 
-/* ── EDIT MODAL ── */
+/* ── EDIT ── */
 function openEdit(type, id) {
-    editContext={type,id};
+    editCtx={type,id};
     document.getElementById('editModalTitle').textContent='Edit Transaction';
     let body='';
     if (type==='expense') {
@@ -944,28 +947,24 @@ function openEdit(type, id) {
             <div class="form-group"><label>Description</label><input type="text" id="eDesc" value="${e.description}"></div>`;
     }
     document.getElementById('editModalBody').innerHTML=body;
-    document.getElementById('editModal').classList.add('active');
+    document.getElementById('editModal').classList.add('open');
 }
 
-function closeEditModal() { document.getElementById('editModal').classList.remove('active'); editContext=null; }
+function closeEditModal() { document.getElementById('editModal').classList.remove('open'); editCtx=null; }
 
 function saveEdit() {
-    if (!editContext) return;
-    const {type,id}=editContext;
-
+    if (!editCtx) return;
+    const {type,id}=editCtx;
     if (type==='pay') {
-        const accId=parseInt(document.getElementById('payAccSelect').value);
+        const accId=parseInt(document.getElementById('payAccSel').value);
         const acc=data.accounts.find(a=>a.id===accId);
         const p=data.payables.find(x=>x.id===id);
         if (acc.amount<p.amount){alert('Insufficient balance');return;}
-        p.paid=true;
-        p.paidDate=new Date().toISOString().split('T')[0];
-        p.paidAccountId=accId;
+        p.paid=true; p.paidDate=new Date().toISOString().split('T')[0]; p.paidAccountId=accId;
         data.expenses.push({id,date:p.paidDate,amount:p.amount,description:'Paid: '+p.description,accountId:accId});
         acc.amount-=p.amount;
         saveData(); closeEditModal(); renderAll(); return;
     }
-
     if (type==='expense') {
         const e=data.expenses.find(x=>x.id===id);
         data.accounts.find(a=>a.id===e.accountId).amount+=e.amount;
@@ -1010,10 +1009,10 @@ function renderSummary() {
     document.getElementById('accountsList').innerHTML = data.accounts.length
         ? data.accounts.map(a=>`
             <div class="account-card">
-                <span class="name">${a.name}</span>
-                <span class="bal">${a.amount<0?'-':''}₱${Math.abs(a.amount).toFixed(2)}</span>
+                <span class="ac-name">${a.name}</span>
+                <span class="ac-bal">${a.amount<0?'-':''}₱${Math.abs(a.amount).toFixed(2)}</span>
             </div>`).join('')
-        : '<div class="empty-state"><div class="ei">🏦</div>No accounts yet</div>';
+        : '<div class="empty-state"><div class="ei">🏦</div>No accounts yet.<br>Tap ⚙ Accounts to add one.</div>';
 }
 
 function renderAll() {
@@ -1024,7 +1023,7 @@ function renderAll() {
     renderList('payableList',  data.payables,  'payable');
 }
 
-document.getElementById('settingsBtn').addEventListener('click', openAccountModal);
+document.getElementById('settingsBtn') && document.getElementById('settingsBtn').addEventListener('click', openAccModal);
 window.addEventListener('load', init);
 </script>
 </body>
