@@ -2,171 +2,251 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a1a1a">
-    <meta name="description" content="Simple offline money tracker app">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Money Tracker</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         :root {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #2d2d2d;
-            --bg-tertiary: #3a3a3a;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
+            --bg-primary: #111318;
+            --bg-secondary: #1e2128;
+            --bg-tertiary: #2a2d35;
+            --bg-input: #252830;
+            --text-primary: #f1f3f5;
+            --text-secondary: #868e96;
+            --text-muted: #555c66;
             --accent: #10b981;
+            --accent-dim: rgba(16,185,129,0.12);
             --danger: #ef4444;
+            --danger-dim: rgba(239,68,68,0.12);
             --warning: #f59e0b;
-            --success: #10b981;
+            --warning-dim: rgba(245,158,11,0.12);
             --info: #3b82f6;
+            --info-dim: rgba(59,130,246,0.12);
+            --success: #10b981;
+            --border: #2a2d35;
+            --radius: 10px;
+            --radius-sm: 7px;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
+        html, body {
+            height: 100%;
             overflow: hidden;
-            height: 100vh;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+        }
+
+        .app {
             display: flex;
             flex-direction: column;
+            height: 100dvh; /* dynamic viewport height */
+            max-width: 480px;
+            margin: 0 auto;
         }
 
-        .container { display: flex; flex-direction: column; height: 100vh; width: 100%; }
-
+        /* ── HEADER ── */
         .header {
-            background-color: var(--bg-secondary);
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--bg-tertiary);
+            background: var(--bg-secondary);
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
-        .header h1 { font-size: 1.1rem; font-weight: 600; }
+        .header h1 {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
 
-        .content { flex: 1; overflow-y: auto; padding: 0.85rem; padding-bottom: 10px; }
+        .header-btn {
+            background: var(--bg-tertiary);
+            border: none;
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: auto;
+        }
 
+        /* ── SCROLLABLE CONTENT ── */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 14px 14px 8px;
+        }
+
+        /* ── BOTTOM TABS ── */
         .tabs {
             display: flex;
-            background-color: var(--bg-secondary);
-            border-top: 1px solid var(--bg-tertiary);
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         .tab-btn {
             flex: 1;
-            padding: 0.6rem 0.25rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            padding: 8px 4px 6px;
             background: none;
             border: none;
-            border-top: 2px solid transparent;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             cursor: pointer;
-            font-size: 0.7rem;
-            transition: all 0.2s;
-            white-space: nowrap;
-            text-align: center;
+            font-size: 9px;
+            font-weight: 500;
+            border-top: 2px solid transparent;
+            transition: color 0.2s;
+            width: auto;
         }
 
+        .tab-btn .tab-icon { font-size: 17px; line-height: 1; }
         .tab-btn.active { color: var(--accent); border-top-color: var(--accent); }
 
+        /* ── TAB CONTENT ── */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .form-group { margin-bottom: 0.85rem; }
+        /* ── FORM ── */
+        .form-group { margin-bottom: 10px; }
 
         label {
             display: block;
-            margin-bottom: 0.3rem;
+            font-size: 11px;
+            font-weight: 600;
             color: var(--text-secondary);
-            font-size: 0.78rem;
-            font-weight: 500;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
 
         input, select, textarea {
             width: 100%;
-            padding: 0.6rem 0.75rem;
-            background-color: var(--bg-tertiary);
-            border: 1px solid var(--bg-tertiary);
-            border-radius: 0.4rem;
+            padding: 9px 11px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             color: var(--text-primary);
-            font-size: 0.9rem;
-            transition: border 0.2s;
+            font-size: 14px;
+            font-family: inherit;
+            -webkit-appearance: none;
+            appearance: none;
         }
 
-        input:focus, select:focus, textarea:focus {
+        input:focus, select:focus {
             outline: none;
             border-color: var(--accent);
-            background-color: var(--bg-secondary);
         }
 
-        button {
-            padding: 0.6rem 1rem;
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 0.4rem;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: background 0.2s;
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23868e96' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 28px;
+        }
+
+        .add-btn {
             width: 100%;
+            padding: 11px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 4px;
+            letter-spacing: 0.2px;
         }
 
-        button:hover { background-color: #059669; }
-        button.secondary { background-color: var(--bg-tertiary); color: var(--text-primary); }
-        button.secondary:hover { background-color: #4a4a4a; }
-        button.danger { background-color: var(--danger); }
-        button.danger:hover { background-color: #dc2626; }
-        button.warning { background-color: var(--warning); color: #1a1a1a; }
-        button.warning:hover { background-color: #d97706; }
+        .add-btn:active { background: #059669; }
 
-        /* ── COMPACT TRANSACTION ROW ── */
+        /* ── SECTION LABEL ── */
+        .section-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin: 14px 0 7px;
+        }
+
+        /* ── TRANSACTION ROW ── */
         .tx-row {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            background-color: var(--bg-secondary);
-            padding: 0.45rem 0.6rem;
-            border-radius: 0.35rem;
-            margin-bottom: 0.4rem;
+            gap: 7px;
+            background: var(--bg-secondary);
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 5px;
             border-left: 3px solid var(--accent);
-            min-height: 0;
         }
 
         .tx-row.expense  { border-left-color: var(--danger); }
         .tx-row.income   { border-left-color: var(--success); }
         .tx-row.transfer { border-left-color: var(--info); }
-        .tx-row.payable-unpaid { border-left-color: var(--warning); }
         .tx-row.payable-paid   { border-left-color: var(--success); }
+        .tx-row.payable-unpaid { border-left-color: var(--warning); }
 
         .tx-date {
-            font-size: 0.68rem;
-            color: var(--text-secondary);
+            font-size: 10px;
+            color: var(--text-muted);
             white-space: nowrap;
-            min-width: 58px;
+            min-width: 52px;
+        }
+
+        .tx-mid {
+            flex: 1;
+            overflow: hidden;
+            min-width: 0;
         }
 
         .tx-account {
-            font-size: 0.75rem;
+            font-size: 12px;
             font-weight: 600;
             white-space: nowrap;
-            max-width: 70px;
             overflow: hidden;
             text-overflow: ellipsis;
+            line-height: 1.3;
         }
 
         .tx-desc {
-            font-size: 0.72rem;
+            font-size: 10px;
             color: var(--text-secondary);
-            flex: 1;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
+            line-height: 1.3;
+        }
+
+        .tx-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            flex-shrink: 0;
         }
 
         .tx-amount {
-            font-size: 0.8rem;
+            font-size: 13px;
             font-weight: 700;
             white-space: nowrap;
         }
@@ -175,137 +255,211 @@
         .tx-amount.income   { color: var(--success); }
         .tx-amount.transfer { color: var(--info); }
 
-        .tx-actions { display: flex; gap: 0.3rem; }
+        .tx-actions { display: flex; gap: 4px; }
 
-        .tx-actions button {
+        .tx-btn {
+            padding: 3px 7px;
+            font-size: 11px;
+            font-weight: 600;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
             width: auto;
-            padding: 0.25rem 0.5rem;
-            font-size: 0.68rem;
-            font-weight: 600;
-            border-radius: 0.25rem;
         }
 
-        /* payable status badge */
+        .tx-btn.edit   { background: var(--bg-tertiary); color: var(--text-secondary); }
+        .tx-btn.del    { background: var(--danger-dim); color: var(--danger); }
+        .tx-btn.pay    { background: var(--warning-dim); color: var(--warning); }
+        .tx-btn.unpay  { background: var(--bg-tertiary); color: var(--text-secondary); }
+
+        /* payable badge */
         .tx-badge {
-            font-size: 0.65rem;
-            padding: 0.15rem 0.4rem;
-            border-radius: 0.2rem;
-            font-weight: 600;
-            white-space: nowrap;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
-        .tx-badge.paid   { background: rgba(16,185,129,0.2); color: var(--success); }
-        .tx-badge.unpaid { background: rgba(245,158,11,0.2); color: var(--warning); }
+        .tx-badge.paid   { background: var(--accent-dim); color: var(--success); }
+        .tx-badge.unpaid { background: var(--warning-dim); color: var(--warning); }
 
-        /* show-all button */
+        /* show-all */
         .show-all-btn {
-            background: none;
-            border: 1px solid var(--bg-tertiary);
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-            padding: 0.4rem;
-            border-radius: 0.35rem;
-            margin-top: 0.25rem;
             width: 100%;
+            background: none;
+            border: 1px dashed var(--border);
+            color: var(--text-muted);
+            font-size: 11px;
+            padding: 7px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            margin-top: 4px;
             font-weight: 500;
         }
 
-        .show-all-btn:hover { background-color: var(--bg-tertiary); color: var(--text-primary); }
+        .show-all-btn:active { background: var(--bg-tertiary); }
 
-        .history-label {
-            font-size: 0.72rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 1rem 0 0.4rem;
-            font-weight: 600;
+        /* ── SUMMARY ── */
+        .balance-card {
+            background: linear-gradient(135deg, #1a2e25 0%, #1e2128 100%);
+            border: 1px solid rgba(16,185,129,0.2);
+            border-radius: var(--radius);
+            padding: 18px 16px;
+            text-align: center;
+            margin-bottom: 14px;
         }
 
-        /* account cards */
-        .account-item {
-            background-color: var(--bg-secondary);
-            padding: 0.75rem;
-            border-radius: 0.4rem;
-            margin-bottom: 0.6rem;
+        .balance-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 4px;
+        }
+
+        .balance-amount {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -1px;
+        }
+
+        .account-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            padding: 11px 13px;
+            margin-bottom: 7px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-left: 3px solid var(--accent);
         }
 
-        .account-info { flex: 1; }
-        .account-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.1rem; }
-        .account-amount { font-size: 1.15rem; font-weight: 700; color: var(--accent); }
-
-        .account-actions { display: flex; gap: 0.4rem; }
-        .account-actions button { width: auto; padding: 0.35rem 0.7rem; font-size: 0.78rem; }
-
-        .summary-card {
-            background-color: var(--bg-secondary);
-            padding: 1rem;
-            border-radius: 0.4rem;
-            text-align: center;
-            margin-bottom: 0.85rem;
-            border-left: 3px solid var(--accent);
+        .account-card .name {
+            font-size: 13px;
+            font-weight: 600;
         }
 
-        .summary-card h2 { color: var(--text-secondary); font-size: 0.72rem; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        .summary-card .amount { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+        .account-card .bal {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+        }
 
+        /* ── MODAL ── */
         .modal {
-            display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.6);
-            z-index: 1000; align-items: center; justify-content: center;
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            z-index: 100;
+            align-items: flex-end;
+            justify-content: center;
         }
 
         .modal.active { display: flex; }
 
-        .modal-content {
-            background-color: var(--bg-secondary);
-            padding: 1.2rem;
-            border-radius: 0.5rem;
-            width: 95%;
+        .modal-sheet {
+            background: var(--bg-secondary);
+            border-radius: 16px 16px 0 0;
+            padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+            width: 100%;
             max-width: 480px;
-            max-height: 90vh;
+            max-height: 92vh;
             overflow-y: auto;
         }
 
-        .modal-header { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
-        .close-modal { font-size: 1.4rem; cursor: pointer; color: var(--text-secondary); line-height: 1; }
-        .close-modal:hover { color: var(--text-primary); }
-
-        .empty-state { text-align: center; padding: 1.5rem 1rem; color: var(--text-secondary); font-size: 0.82rem; }
-        .empty-state-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-
-        .action-row { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
-        .action-row button { flex: 1; }
-
-        @media (max-width: 400px) {
-            .tx-account { max-width: 55px; }
-            .tab-btn { font-size: 0.62rem; padding: 0.55rem 0.1rem; }
+        .modal-handle {
+            width: 36px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin: 0 auto 14px;
         }
+
+        .modal-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            font-size: 18px;
+            color: var(--text-muted);
+            cursor: pointer;
+            line-height: 1;
+            background: none;
+            border: none;
+            width: auto;
+            padding: 0;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .modal-actions button { flex: 1; padding: 11px; font-size: 13px; font-weight: 700; border-radius: var(--radius-sm); }
+
+        .btn-cancel { background: var(--bg-tertiary); color: var(--text-secondary); border: none; }
+        .btn-save   { background: var(--accent); color: #fff; border: none; }
+        .btn-danger { background: var(--danger); color: #fff; border: none; }
+
+        /* account list in modal */
+        .acc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-tertiary);
+            padding: 9px 11px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 6px;
+        }
+
+        .acc-row .acc-info .acc-name { font-size: 13px; font-weight: 600; }
+        .acc-row .acc-info .acc-bal  { font-size: 12px; color: var(--accent); }
+        .acc-row-btns { display: flex; gap: 5px; }
+        .acc-row-btns button { width: auto; padding: 4px 9px; font-size: 11px; font-weight: 600; border-radius: 5px; border: none; cursor: pointer; }
+
+        .empty-state {
+            text-align: center;
+            padding: 24px 0 16px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .empty-state .ei { font-size: 28px; margin-bottom: 6px; }
     </style>
 </head>
 <body>
-<div class="container">
+<div class="app">
+
+    <!-- HEADER -->
     <div class="header">
         <h1>💰 Money Tracker</h1>
-        <button class="secondary" id="settingsBtn" style="width:auto;padding:0.4rem 0.85rem;font-size:0.85rem;">⚙️ Accounts</button>
+        <button class="header-btn" id="settingsBtn">⚙ Accounts</button>
     </div>
 
-    <div class="content" id="mainContent">
+    <!-- CONTENT -->
+    <div class="content">
 
-        <!-- Summary Tab -->
+        <!-- Summary -->
         <div id="summaryTab" class="tab-content active">
-            <div class="summary-card">
-                <h2>Total Balance</h2>
-                <div class="amount" id="totalBalance">₱0.00</div>
+            <div class="balance-card">
+                <div class="balance-label">Total Balance</div>
+                <div class="balance-amount" id="totalBalance">₱0.00</div>
             </div>
             <div id="accountsList"></div>
         </div>
 
-        <!-- Expense Tab -->
+        <!-- Expenses -->
         <div id="expenseTab" class="tab-content">
             <div class="form-group">
                 <label>Date</label>
@@ -313,22 +467,22 @@
             </div>
             <div class="form-group">
                 <label>Amount</label>
-                <input type="number" id="expenseAmount" placeholder="0.00" step="0.01" min="0">
+                <input type="number" id="expenseAmount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
             </div>
             <div class="form-group">
-                <label>Description (Optional)</label>
+                <label>Description <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(optional)</span></label>
                 <input type="text" id="expenseDescription" placeholder="What did you spend on?">
             </div>
             <div class="form-group">
                 <label>Account</label>
                 <select id="expenseAccount"></select>
             </div>
-            <button onclick="addExpense()">+ Add Expense</button>
-            <div class="history-label">Recent Expenses</div>
+            <button class="add-btn" onclick="addExpense()">+ Add Expense</button>
+            <div class="section-label">Recent Expenses</div>
             <div id="expenseList"></div>
         </div>
 
-        <!-- Income Tab -->
+        <!-- Income -->
         <div id="incomeTab" class="tab-content">
             <div class="form-group">
                 <label>Date</label>
@@ -336,22 +490,22 @@
             </div>
             <div class="form-group">
                 <label>Amount</label>
-                <input type="number" id="incomeAmount" placeholder="0.00" step="0.01" min="0">
+                <input type="number" id="incomeAmount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
             </div>
             <div class="form-group">
-                <label>Description (Optional)</label>
+                <label>Description <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(optional)</span></label>
                 <input type="text" id="incomeDescription" placeholder="Where did this come from?">
             </div>
             <div class="form-group">
                 <label>Account</label>
                 <select id="incomeAccount"></select>
             </div>
-            <button onclick="addIncome()">+ Add Income</button>
-            <div class="history-label">Recent Income</div>
+            <button class="add-btn" onclick="addIncome()">+ Add Income</button>
+            <div class="section-label">Recent Income</div>
             <div id="incomeList"></div>
         </div>
 
-        <!-- Transfer Tab -->
+        <!-- Transfer -->
         <div id="transferTab" class="tab-content">
             <div class="form-group">
                 <label>Date</label>
@@ -359,7 +513,7 @@
             </div>
             <div class="form-group">
                 <label>Amount</label>
-                <input type="number" id="transferAmount" placeholder="0.00" step="0.01" min="0">
+                <input type="number" id="transferAmount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
             </div>
             <div class="form-group">
                 <label>From Account</label>
@@ -370,19 +524,19 @@
                 <select id="transferTo"></select>
             </div>
             <div class="form-group">
-                <label>Transfer Fee</label>
-                <input type="number" id="transferFee" placeholder="0.00" step="0.01" min="0">
+                <label>Transfer Fee <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(optional)</span></label>
+                <input type="number" id="transferFee" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
             </div>
             <div class="form-group">
-                <label>Description (Optional)</label>
+                <label>Notes <span style="text-transform:none;font-weight:400;color:var(--text-muted)">(optional)</span></label>
                 <input type="text" id="transferDescription" placeholder="Transfer notes...">
             </div>
-            <button onclick="addTransfer()">+ Add Transfer</button>
-            <div class="history-label">Recent Transfers</div>
+            <button class="add-btn" onclick="addTransfer()">+ Add Transfer</button>
+            <div class="section-label">Recent Transfers</div>
             <div id="transferList"></div>
         </div>
 
-        <!-- Payable Tab -->
+        <!-- Payable -->
         <div id="payableTab" class="tab-content">
             <div class="form-group">
                 <label>Date</label>
@@ -390,504 +544,484 @@
             </div>
             <div class="form-group">
                 <label>Amount</label>
-                <input type="number" id="payableAmount" placeholder="0.00" step="0.01" min="0">
+                <input type="number" id="payableAmount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
             </div>
             <div class="form-group">
                 <label>Description</label>
                 <input type="text" id="payableDescription" placeholder="Who or what is this for?">
             </div>
-            <button onclick="addPayable()">+ Add Payable</button>
-            <div class="history-label">Payables</div>
+            <button class="add-btn" onclick="addPayable()">+ Add Payable</button>
+            <div class="section-label">Payables</div>
             <div id="payableList"></div>
         </div>
 
     </div>
 
+    <!-- BOTTOM TABS -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('summary',this)">📊<br>Summary</button>
-        <button class="tab-btn" onclick="switchTab('expense',this)">💸<br>Expenses</button>
-        <button class="tab-btn" onclick="switchTab('income',this)">💵<br>Income</button>
-        <button class="tab-btn" onclick="switchTab('transfer',this)">🔄<br>Transfer</button>
-        <button class="tab-btn" onclick="switchTab('payable',this)">📋<br>Payable</button>
+        <button class="tab-btn active" onclick="switchTab('summary',this)">
+            <span class="tab-icon">📊</span>Summary
+        </button>
+        <button class="tab-btn" onclick="switchTab('expense',this)">
+            <span class="tab-icon">💸</span>Expenses
+        </button>
+        <button class="tab-btn" onclick="switchTab('income',this)">
+            <span class="tab-icon">💵</span>Income
+        </button>
+        <button class="tab-btn" onclick="switchTab('transfer',this)">
+            <span class="tab-icon">🔄</span>Transfer
+        </button>
+        <button class="tab-btn" onclick="switchTab('payable',this)">
+            <span class="tab-icon">📋</span>Payable
+        </button>
     </div>
 </div>
 
-<!-- Account Modal -->
+<!-- ACCOUNTS MODAL -->
 <div id="accountModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">
             Manage Accounts
-            <span class="close-modal" onclick="closeAccountModal()">&times;</span>
+            <button class="modal-close" onclick="closeAccountModal()">✕</button>
         </div>
         <div class="form-group">
-            <label>Account Name (e.g. GCash, Cash)</label>
-            <input type="text" id="newAccountName" placeholder="Account name">
+            <label>Account Name</label>
+            <input type="text" id="newAccountName" placeholder="e.g. GCash, Cash, Bank">
         </div>
         <div class="form-group">
             <label>Initial Amount</label>
-            <input type="number" id="newAccountAmount" placeholder="0.00" step="0.01" min="0">
+            <input type="number" id="newAccountAmount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
         </div>
-        <button onclick="addAccount()">Add Account</button>
-        <div id="editAccountsList" style="margin-top:1rem;"></div>
+        <button class="add-btn" onclick="addAccount()">+ Add Account</button>
+        <div class="section-label" style="margin-top:14px;">Your Accounts</div>
+        <div id="editAccountsList"></div>
     </div>
 </div>
 
-<!-- Edit Transaction Modal -->
+<!-- EDIT / PAY MODAL -->
 <div id="editModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            Edit Transaction
-            <span class="close-modal" onclick="closeEditModal()">&times;</span>
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">
+            <span id="editModalTitle">Edit Transaction</span>
+            <button class="modal-close" onclick="closeEditModal()">✕</button>
         </div>
         <div id="editModalBody"></div>
-        <div class="action-row" style="margin-top:1rem;">
-            <button class="secondary" onclick="closeEditModal()">Cancel</button>
-            <button onclick="saveEdit()">Save</button>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+            <button class="btn-save"   onclick="saveEdit()">Save</button>
         </div>
     </div>
 </div>
 
 <script>
-let data = { accounts: [], expenses: [], income: [], transfers: [], payables: [] };
-const STORAGE_KEY = 'moneyTrackerData';
-let editContext = null; // { type, id }
-const PREVIEW_LIMIT = 5;
+let data = { accounts:[], expenses:[], income:[], transfers:[], payables:[] };
+const STORAGE_KEY = 'moneyTrackerData_v2';
+let editContext = null;
+const LIMIT = 5;
+const showAll = { expense:false, income:false, transfer:false, payable:false };
 
-/* ── SHOW ALL STATE per list ── */
-const showAllState = { expense: false, income: false, transfer: false, payable: false };
-
+/* ── INIT ── */
 function init() {
     loadData();
-    if (data.accounts.length === 0) openAccountModal();
-    setDefaultDates();
-    updateAccountSelects();
+    if (!data.accounts.length) openAccountModal();
+    setDates();
+    updateSelects();
     renderAll();
-    registerServiceWorker();
-}
-
-async function registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js');
-    }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 }
 
 function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
-function loadData() {
-    const s = localStorage.getItem(STORAGE_KEY);
-    if (s) data = JSON.parse(s);
-}
+function loadData()  { const s=localStorage.getItem(STORAGE_KEY); if(s) data=JSON.parse(s); }
 
-/* ── ACCOUNTS ── */
-function openAccountModal() { document.getElementById('accountModal').classList.add('active'); renderEditAccounts(); }
-function closeAccountModal() { document.getElementById('accountModal').classList.remove('active'); }
-
-function addAccount() {
-    const name = document.getElementById('newAccountName').value.trim();
-    const amount = parseFloat(document.getElementById('newAccountAmount').value) || 0;
-    if (!name) { alert('Please enter account name'); return; }
-    data.accounts.push({ id: Date.now(), name, amount });
-    document.getElementById('newAccountName').value = '';
-    document.getElementById('newAccountAmount').value = '';
-    saveData(); updateAccountSelects(); renderEditAccounts(); renderAll();
-}
-
-function deleteAccount(id) {
-    if (confirm('Delete this account?')) {
-        data.accounts = data.accounts.filter(a => a.id !== id);
-        saveData(); updateAccountSelects(); renderEditAccounts(); renderAll();
-    }
-}
-
-function editAccountAmount(id) {
-    const acc = data.accounts.find(a => a.id === id);
-    const v = prompt('Enter new amount:', acc.amount);
-    if (v !== null) { acc.amount = parseFloat(v) || 0; saveData(); updateAccountSelects(); renderEditAccounts(); renderAll(); }
-}
-
-function renderEditAccounts() {
-    const c = document.getElementById('editAccountsList');
-    if (!data.accounts.length) { c.innerHTML = '<p style="color:var(--text-secondary);text-align:center;font-size:0.82rem;">No accounts yet</p>'; return; }
-    c.innerHTML = data.accounts.map(acc => `
-        <div class="account-item">
-            <div class="account-info">
-                <div class="account-name">${acc.name}</div>
-                <div class="account-amount">₱${acc.amount.toFixed(2)}</div>
-            </div>
-            <div class="account-actions">
-                <button class="secondary" onclick="editAccountAmount(${acc.id})">Edit</button>
-                <button class="danger" onclick="deleteAccount(${acc.id})">Del</button>
-            </div>
-        </div>`).join('');
-}
-
-function updateAccountSelects() {
-    const opts = data.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-    ['expenseAccount','incomeAccount','transferFrom','transferTo'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.innerHTML = opts;
+/* ── DATES ── */
+function setDates() {
+    const t = new Date().toISOString().split('T')[0];
+    ['expenseDate','incomeDate','transferDate','payableDate'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.value=t;
     });
 }
 
 /* ── TABS ── */
-function switchTab(tab, btn) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    const map = { summary:'summaryTab', expense:'expenseTab', income:'incomeTab', transfer:'transferTab', payable:'payableTab' };
-    document.getElementById(map[tab]).classList.add('active');
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+    document.getElementById(name+'Tab').classList.add('active');
     btn.classList.add('active');
+    // scroll content to top
+    document.querySelector('.content').scrollTop = 0;
 }
 
-function setDefaultDates() {
-    const today = new Date().toISOString().split('T')[0];
-    ['expenseDate','incomeDate','transferDate','payableDate'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.value = today;
+/* ── ACCOUNTS ── */
+function openAccountModal()  { document.getElementById('accountModal').classList.add('active'); renderAccModal(); }
+function closeAccountModal() { document.getElementById('accountModal').classList.remove('active'); }
+
+function addAccount() {
+    const name = document.getElementById('newAccountName').value.trim();
+    const amt  = parseFloat(document.getElementById('newAccountAmount').value) || 0;
+    if (!name) { alert('Enter account name'); return; }
+    data.accounts.push({ id:Date.now(), name, amount:amt });
+    document.getElementById('newAccountName').value='';
+    document.getElementById('newAccountAmount').value='';
+    saveData(); updateSelects(); renderAccModal(); renderAll();
+}
+
+function deleteAccount(id) {
+    if(!confirm('Delete account?')) return;
+    data.accounts = data.accounts.filter(a=>a.id!==id);
+    saveData(); updateSelects(); renderAccModal(); renderAll();
+}
+
+function editAccAmt(id) {
+    const acc = data.accounts.find(a=>a.id===id);
+    const v = prompt('New amount:', acc.amount);
+    if (v!==null) { acc.amount=parseFloat(v)||0; saveData(); updateSelects(); renderAccModal(); renderAll(); }
+}
+
+function renderAccModal() {
+    const c = document.getElementById('editAccountsList');
+    if (!data.accounts.length) { c.innerHTML='<div class="empty-state"><div class="ei">🏦</div>No accounts yet</div>'; return; }
+    c.innerHTML = data.accounts.map(a=>`
+        <div class="acc-row">
+            <div class="acc-info">
+                <div class="acc-name">${a.name}</div>
+                <div class="acc-bal">₱${a.amount.toFixed(2)}</div>
+            </div>
+            <div class="acc-row-btns">
+                <button style="background:var(--bg-secondary);color:var(--text-secondary);" onclick="editAccAmt(${a.id})">Edit</button>
+                <button style="background:var(--danger-dim);color:var(--danger);" onclick="deleteAccount(${a.id})">Del</button>
+            </div>
+        </div>`).join('');
+}
+
+function updateSelects() {
+    const opts = data.accounts.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+    ['expenseAccount','incomeAccount','transferFrom','transferTo'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.innerHTML=opts;
     });
 }
 
-/* ── RENDER HELPER ── */
-function fmtDate(d) {
-    const dt = new Date(d + 'T00:00:00');
-    return dt.toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'2-digit' });
+/* ── FORMAT DATE ── */
+function fd(d) {
+    const dt=new Date(d+'T00:00:00');
+    return dt.toLocaleDateString('en-PH',{month:'short',day:'numeric'});
 }
 
-function renderList(containerId, items, type, showAll) {
-    const container = document.getElementById(containerId);
+/* ── RENDER LIST ── */
+function renderList(cid, items, type) {
+    const c = document.getElementById(cid);
     if (!items.length) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">${{expense:'💸',income:'💵',transfer:'🔄',payable:'📋'}[type]}</div><p>No records yet</p></div>`;
+        c.innerHTML=`<div class="empty-state"><div class="ei">${{expense:'💸',income:'💵',transfer:'🔄',payable:'📋'}[type]}</div>No records yet</div>`;
         return;
     }
-    const sorted = [...items].sort((a,b) => new Date(b.date) - new Date(a.date));
-    const visible = showAll ? sorted : sorted.slice(0, PREVIEW_LIMIT);
-
-    let html = visible.map(item => buildTxRow(item, type)).join('');
-
-    if (sorted.length > PREVIEW_LIMIT) {
-        if (!showAll) {
-            html += `<button class="show-all-btn" onclick="toggleShowAll('${type}')">Show all ${sorted.length} records ▾</button>`;
-        } else {
-            html += `<button class="show-all-btn" onclick="toggleShowAll('${type}')">Show less ▴</button>`;
-        }
+    const sorted = [...items].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const vis = showAll[type] ? sorted : sorted.slice(0, LIMIT);
+    let html = vis.map(item=>txRow(item,type)).join('');
+    if (sorted.length > LIMIT) {
+        html += showAll[type]
+            ? `<button class="show-all-btn" onclick="toggleAll('${type}')">Show less ▴</button>`
+            : `<button class="show-all-btn" onclick="toggleAll('${type}')">Show all ${sorted.length} records ▾</button>`;
     }
-    container.innerHTML = html;
+    c.innerHTML=html;
 }
 
-function toggleShowAll(type) {
-    showAllState[type] = !showAllState[type];
-    renderAll();
-}
+function toggleAll(type) { showAll[type]=!showAll[type]; renderAll(); }
 
-function buildTxRow(item, type) {
-    let dateStr = fmtDate(item.date);
-    let accountStr = '', amountStr = '', descStr = '', amountClass = '', extra = '';
+function txRow(item, type) {
+    let dateStr='', accStr='', descStr='', amtStr='', amtClass='', extra='', btns='';
 
-    if (type === 'expense') {
-        const acc = data.accounts.find(a => a.id === item.accountId);
-        accountStr = acc ? acc.name : '—';
-        amountStr = `-₱${item.amount.toFixed(2)}`;
-        amountClass = 'expense';
-        descStr = item.description || '';
-    } else if (type === 'income') {
-        const acc = data.accounts.find(a => a.id === item.accountId);
-        accountStr = acc ? acc.name : '—';
-        amountStr = `+₱${item.amount.toFixed(2)}`;
-        amountClass = 'income';
-        descStr = item.description || '';
-    } else if (type === 'transfer') {
-        const from = data.accounts.find(a => a.id === item.fromId);
-        const to = data.accounts.find(a => a.id === item.toId);
-        accountStr = `${from ? from.name : '?'}→${to ? to.name : '?'}`;
-        amountStr = `₱${item.amount.toFixed(2)}`;
-        amountClass = 'transfer';
-        descStr = item.description || (item.fee > 0 ? `Fee:₱${item.fee.toFixed(2)}` : '');
-    } else if (type === 'payable') {
-        accountStr = item.paid ? (data.accounts.find(a=>a.id===item.paidAccountId)?.name || '—') : '—';
-        amountStr = `₱${item.amount.toFixed(2)}`;
-        amountClass = '';
-        descStr = item.description || '';
-        extra = `<span class="tx-badge ${item.paid ? 'paid' : 'unpaid'}">${item.paid ? 'Paid' : 'Unpaid'}</span>`;
+    dateStr = fd(item.date);
+
+    if (type==='expense') {
+        const acc=data.accounts.find(a=>a.id===item.accountId);
+        accStr=acc?acc.name:'—';
+        descStr=item.description||'';
+        amtStr=`-₱${item.amount.toFixed(2)}`;
+        amtClass='expense';
+    } else if (type==='income') {
+        const acc=data.accounts.find(a=>a.id===item.accountId);
+        accStr=acc?acc.name:'—';
+        descStr=item.description||'';
+        amtStr=`+₱${item.amount.toFixed(2)}`;
+        amtClass='income';
+    } else if (type==='transfer') {
+        const fr=data.accounts.find(a=>a.id===item.fromId);
+        const to=data.accounts.find(a=>a.id===item.toId);
+        accStr=`${fr?fr.name:'?'} → ${to?to.name:'?'}`;
+        descStr=item.description||(item.fee>0?`Fee ₱${item.fee.toFixed(2)}`:'');
+        amtStr=`₱${item.amount.toFixed(2)}`;
+        amtClass='transfer';
+    } else if (type==='payable') {
+        const pacc=item.paid?data.accounts.find(a=>a.id===item.paidAccountId):null;
+        accStr=pacc?pacc.name:'—';
+        descStr=item.description||'';
+        amtStr=`₱${item.amount.toFixed(2)}`;
+        extra=`<span class="tx-badge ${item.paid?'paid':'unpaid'}">${item.paid?'Paid':'Unpaid'}</span>`;
     }
 
-    const editBtn = `<button class="secondary" onclick="openEdit('${type}',${item.id})">✏️</button>`;
-    const delBtn  = `<button class="danger" onclick="deleteRecord('${type}',${item.id})">🗑</button>`;
-
-    // payable also has mark-paid button
-    let payBtn = '';
-    if (type === 'payable') {
-        payBtn = item.paid
-            ? `<button class="secondary" onclick="markPayableAsPaid(${item.id})" style="font-size:0.65rem;">↩</button>`
-            : `<button class="warning" onclick="markPayableAsPaid(${item.id})" style="font-size:0.65rem;">✓</button>`;
+    if (type==='payable') {
+        btns = item.paid
+            ? `<button class="tx-btn unpay" onclick="markPaid(${item.id})">↩</button>`
+            : `<button class="tx-btn pay"   onclick="markPaid(${item.id})">✓ Pay</button>`;
     }
+    btns += `<button class="tx-btn edit" onclick="openEdit('${type}',${item.id})">✏</button>`;
+    btns += `<button class="tx-btn del"  onclick="delRecord('${type}',${item.id})">🗑</button>`;
 
     return `
-    <div class="tx-row ${type === 'payable' ? (item.paid ? 'payable-paid' : 'payable-unpaid') : type}">
-        <span class="tx-date">${dateStr}</span>
-        <span class="tx-account">${accountStr}</span>
-        <span class="tx-desc">${descStr}</span>
+    <div class="tx-row ${type==='payable'?(item.paid?'payable-paid':'payable-unpaid'):type}">
+        <div class="tx-date">${dateStr}</div>
+        <div class="tx-mid">
+            <div class="tx-account">${accStr}</div>
+            ${descStr?`<div class="tx-desc">${descStr}</div>`:''}
+        </div>
         ${extra}
-        <span class="tx-amount ${amountClass}">${amountStr}</span>
-        <div class="tx-actions">${payBtn}${editBtn}${delBtn}</div>
+        <div class="tx-right">
+            <span class="tx-amount ${amtClass}">${amtStr}</span>
+            <div class="tx-actions">${btns}</div>
+        </div>
     </div>`;
 }
 
-/* ── ADD EXPENSE ── */
+/* ── ADD FUNCTIONS ── */
 function addExpense() {
-    const date = document.getElementById('expenseDate').value;
-    const amount = parseFloat(document.getElementById('expenseAmount').value);
-    const description = document.getElementById('expenseDescription').value.trim();
-    const accountId = parseInt(document.getElementById('expenseAccount').value);
-    if (!date || !amount || amount <= 0 || !accountId) { alert('Please fill all required fields'); return; }
-    const acc = data.accounts.find(a => a.id === accountId);
-    if (acc.amount < amount) { alert('Insufficient balance in ' + acc.name); return; }
-    data.expenses.push({ id: Date.now(), date, amount, description, accountId });
-    acc.amount -= amount;
+    const date=document.getElementById('expenseDate').value;
+    const amt=parseFloat(document.getElementById('expenseAmount').value);
+    const desc=document.getElementById('expenseDescription').value.trim();
+    const accId=parseInt(document.getElementById('expenseAccount').value);
+    if (!date||!amt||amt<=0||!accId){alert('Fill required fields');return;}
+    const acc=data.accounts.find(a=>a.id===accId);
+    if (acc.amount<amt){alert('Insufficient balance in '+acc.name);return;}
+    data.expenses.push({id:Date.now(),date,amount:amt,description:desc,accountId:accId});
+    acc.amount-=amt;
     saveData();
-    document.getElementById('expenseAmount').value = '';
-    document.getElementById('expenseDescription').value = '';
+    document.getElementById('expenseAmount').value='';
+    document.getElementById('expenseDescription').value='';
     renderAll();
 }
 
-/* ── ADD INCOME ── */
 function addIncome() {
-    const date = document.getElementById('incomeDate').value;
-    const amount = parseFloat(document.getElementById('incomeAmount').value);
-    const description = document.getElementById('incomeDescription').value.trim();
-    const accountId = parseInt(document.getElementById('incomeAccount').value);
-    if (!date || !amount || amount <= 0 || !accountId) { alert('Please fill all required fields'); return; }
-    data.income.push({ id: Date.now(), date, amount, description, accountId });
-    data.accounts.find(a => a.id === accountId).amount += amount;
+    const date=document.getElementById('incomeDate').value;
+    const amt=parseFloat(document.getElementById('incomeAmount').value);
+    const desc=document.getElementById('incomeDescription').value.trim();
+    const accId=parseInt(document.getElementById('incomeAccount').value);
+    if (!date||!amt||amt<=0||!accId){alert('Fill required fields');return;}
+    data.income.push({id:Date.now(),date,amount:amt,description:desc,accountId:accId});
+    data.accounts.find(a=>a.id===accId).amount+=amt;
     saveData();
-    document.getElementById('incomeAmount').value = '';
-    document.getElementById('incomeDescription').value = '';
+    document.getElementById('incomeAmount').value='';
+    document.getElementById('incomeDescription').value='';
     renderAll();
 }
 
-/* ── ADD TRANSFER ── */
 function addTransfer() {
-    const date = document.getElementById('transferDate').value;
-    const amount = parseFloat(document.getElementById('transferAmount').value);
-    const fromId = parseInt(document.getElementById('transferFrom').value);
-    const toId   = parseInt(document.getElementById('transferTo').value);
-    const fee    = parseFloat(document.getElementById('transferFee').value) || 0;
-    const description = document.getElementById('transferDescription').value.trim();
-    if (!date || !amount || amount <= 0) { alert('Please fill all required fields'); return; }
-    if (fromId === toId) { alert('Cannot transfer to the same account'); return; }
-    const fromAcc = data.accounts.find(a => a.id === fromId);
-    if (fromAcc.amount < (amount + fee)) { alert('Insufficient balance in ' + fromAcc.name); return; }
-    const tid = Date.now();
-    data.transfers.push({ id: tid, date, amount, fromId, toId, fee, description });
-    fromAcc.amount -= (amount + fee);
-    data.accounts.find(a => a.id === toId).amount += amount;
-    if (fee > 0) data.expenses.push({ id: tid + 1, date, amount: fee, description: 'Transfer fee', accountId: fromId });
+    const date=document.getElementById('transferDate').value;
+    const amt=parseFloat(document.getElementById('transferAmount').value);
+    const fromId=parseInt(document.getElementById('transferFrom').value);
+    const toId=parseInt(document.getElementById('transferTo').value);
+    const fee=parseFloat(document.getElementById('transferFee').value)||0;
+    const desc=document.getElementById('transferDescription').value.trim();
+    if (!date||!amt||amt<=0){alert('Fill required fields');return;}
+    if (fromId===toId){alert('Cannot transfer to same account');return;}
+    const fromAcc=data.accounts.find(a=>a.id===fromId);
+    if (fromAcc.amount<(amt+fee)){alert('Insufficient balance in '+fromAcc.name);return;}
+    const tid=Date.now();
+    data.transfers.push({id:tid,date,amount:amt,fromId,toId,fee,description:desc});
+    fromAcc.amount-=(amt+fee);
+    data.accounts.find(a=>a.id===toId).amount+=amt;
+    if (fee>0) data.expenses.push({id:tid+1,date,amount:fee,description:'Transfer fee',accountId:fromId});
     saveData();
-    document.getElementById('transferAmount').value = '';
-    document.getElementById('transferFee').value = '';
-    document.getElementById('transferDescription').value = '';
+    document.getElementById('transferAmount').value='';
+    document.getElementById('transferFee').value='';
+    document.getElementById('transferDescription').value='';
     renderAll();
 }
 
-/* ── ADD PAYABLE ── */
 function addPayable() {
-    const date = document.getElementById('payableDate').value;
-    const amount = parseFloat(document.getElementById('payableAmount').value);
-    const description = document.getElementById('payableDescription').value.trim();
-    if (!date || !amount || amount <= 0 || !description) { alert('Please fill all required fields'); return; }
-    data.payables.push({ id: Date.now(), date, amount, description, paid: false, paidDate: null, paidAccountId: null });
+    const date=document.getElementById('payableDate').value;
+    const amt=parseFloat(document.getElementById('payableAmount').value);
+    const desc=document.getElementById('payableDescription').value.trim();
+    if (!date||!amt||amt<=0||!desc){alert('Fill required fields');return;}
+    data.payables.push({id:Date.now(),date,amount:amt,description:desc,paid:false,paidDate:null,paidAccountId:null});
     saveData();
-    document.getElementById('payableAmount').value = '';
-    document.getElementById('payableDescription').value = '';
+    document.getElementById('payableAmount').value='';
+    document.getElementById('payableDescription').value='';
     renderAll();
 }
 
 /* ── DELETE ── */
-function deleteRecord(type, id) {
+function delRecord(type, id) {
     if (!confirm('Delete this record?')) return;
-    if (type === 'expense') {
-        const exp = data.expenses.find(e => e.id === id);
-        if (exp) { data.accounts.find(a => a.id === exp.accountId).amount += exp.amount; }
-        data.expenses = data.expenses.filter(e => e.id !== id);
-    } else if (type === 'income') {
-        const inc = data.income.find(i => i.id === id);
-        if (inc) { data.accounts.find(a => a.id === inc.accountId).amount -= inc.amount; }
-        data.income = data.income.filter(i => i.id !== id);
-    } else if (type === 'transfer') {
-        const t = data.transfers.find(t => t.id === id);
-        if (t) {
-            data.accounts.find(a => a.id === t.fromId).amount += (t.amount + t.fee);
-            data.accounts.find(a => a.id === t.toId).amount -= t.amount;
-            data.expenses = data.expenses.filter(e => !(e.description === 'Transfer fee' && e.id === id + 1));
+    if (type==='expense') {
+        const e=data.expenses.find(x=>x.id===id);
+        if(e) data.accounts.find(a=>a.id===e.accountId).amount+=e.amount;
+        data.expenses=data.expenses.filter(x=>x.id!==id);
+    } else if (type==='income') {
+        const e=data.income.find(x=>x.id===id);
+        if(e) data.accounts.find(a=>a.id===e.accountId).amount-=e.amount;
+        data.income=data.income.filter(x=>x.id!==id);
+    } else if (type==='transfer') {
+        const e=data.transfers.find(x=>x.id===id);
+        if(e){
+            data.accounts.find(a=>a.id===e.fromId).amount+=(e.amount+e.fee);
+            data.accounts.find(a=>a.id===e.toId).amount-=e.amount;
+            data.expenses=data.expenses.filter(x=>!(x.description==='Transfer fee'&&x.id===id+1));
         }
-        data.transfers = data.transfers.filter(t => t.id !== id);
-    } else if (type === 'payable') {
-        const p = data.payables.find(p => p.id === id);
-        if (p && p.paid) {
-            const acc = data.accounts.find(a => a.id === p.paidAccountId);
-            if (acc) acc.amount += p.amount;
-            data.expenses = data.expenses.filter(e => e.id !== id);
+        data.transfers=data.transfers.filter(x=>x.id!==id);
+    } else if (type==='payable') {
+        const e=data.payables.find(x=>x.id===id);
+        if(e&&e.paid){
+            const acc=data.accounts.find(a=>a.id===e.paidAccountId);
+            if(acc) acc.amount+=e.amount;
+            data.expenses=data.expenses.filter(x=>x.id!==id);
         }
-        data.payables = data.payables.filter(p => p.id !== id);
+        data.payables=data.payables.filter(x=>x.id!==id);
     }
     saveData(); renderAll();
 }
 
-/* ── MARK PAYABLE PAID/UNPAID ── */
-function markPayableAsPaid(id) {
-    const p = data.payables.find(p => p.id === id);
+/* ── MARK PAID ── */
+function markPaid(id) {
+    const p=data.payables.find(x=>x.id===id);
     if (!p) return;
     if (p.paid) {
-        // revert
-        const acc = data.accounts.find(a => a.id === p.paidAccountId);
-        if (acc) acc.amount += p.amount;
-        data.expenses = data.expenses.filter(e => e.id !== id);
-        p.paid = false; p.paidDate = null; p.paidAccountId = null;
+        const acc=data.accounts.find(a=>a.id===p.paidAccountId);
+        if(acc) acc.amount+=p.amount;
+        data.expenses=data.expenses.filter(x=>x.id!==id);
+        p.paid=false; p.paidDate=null; p.paidAccountId=null;
+        saveData(); renderAll();
     } else {
-        // pick account via modal dropdown
-        openPayModal(id);
-        return;
+        // open pay modal
+        editContext={type:'pay',id};
+        const opts=data.accounts.map(a=>`<option value="${a.id}">${a.name} — ₱${a.amount.toFixed(2)}</option>`).join('');
+        document.getElementById('editModalTitle').textContent='Mark as Paid';
+        document.getElementById('editModalBody').innerHTML=`
+            <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
+                Paying <strong style="color:var(--text-primary);">₱${p.amount.toFixed(2)}</strong> for "${p.description}"
+            </p>
+            <div class="form-group"><label>Pay from Account</label><select id="payAccSelect">${opts}</select></div>`;
+        document.getElementById('editModal').classList.add('active');
     }
-    saveData(); renderAll();
-}
-
-/* small inline modal for picking account when paying */
-function openPayModal(payableId) {
-    const p = data.payables.find(p => p.id === payableId);
-    const opts = data.accounts.map(a => `<option value="${a.id}">${a.name} (₱${a.amount.toFixed(2)})</option>`).join('');
-    editContext = { type: 'pay', id: payableId };
-    document.getElementById('editModalBody').innerHTML = `
-        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.75rem;">Pay <strong style="color:var(--text-primary);">₱${p.amount.toFixed(2)}</strong> — ${p.description}</p>
-        <div class="form-group">
-            <label>Pay from Account</label>
-            <select id="payAccountSelect">${opts}</select>
-        </div>`;
-    document.getElementById('editModal').classList.add('active');
 }
 
 /* ── EDIT MODAL ── */
 function openEdit(type, id) {
-    editContext = { type, id };
-    let body = '';
-    if (type === 'expense') {
-        const e = data.expenses.find(x => x.id === id);
-        const opts = data.accounts.map(a => `<option value="${a.id}" ${a.id===e.accountId?'selected':''}>${a.name}</option>`).join('');
-        body = `
-            <div class="form-group"><label>Date</label><input type="date" id="editDate" value="${e.date}"></div>
-            <div class="form-group"><label>Amount</label><input type="number" id="editAmount" value="${e.amount}" step="0.01" min="0"></div>
-            <div class="form-group"><label>Description</label><input type="text" id="editDesc" value="${e.description}"></div>
-            <div class="form-group"><label>Account</label><select id="editAccount">${opts}</select></div>`;
-    } else if (type === 'income') {
-        const e = data.income.find(x => x.id === id);
-        const opts = data.accounts.map(a => `<option value="${a.id}" ${a.id===e.accountId?'selected':''}>${a.name}</option>`).join('');
-        body = `
-            <div class="form-group"><label>Date</label><input type="date" id="editDate" value="${e.date}"></div>
-            <div class="form-group"><label>Amount</label><input type="number" id="editAmount" value="${e.amount}" step="0.01" min="0"></div>
-            <div class="form-group"><label>Description</label><input type="text" id="editDesc" value="${e.description}"></div>
-            <div class="form-group"><label>Account</label><select id="editAccount">${opts}</select></div>`;
-    } else if (type === 'transfer') {
-        const e = data.transfers.find(x => x.id === id);
-        const fromOpts = data.accounts.map(a => `<option value="${a.id}" ${a.id===e.fromId?'selected':''}>${a.name}</option>`).join('');
-        const toOpts   = data.accounts.map(a => `<option value="${a.id}" ${a.id===e.toId?'selected':''}>${a.name}</option>`).join('');
-        body = `
-            <div class="form-group"><label>Date</label><input type="date" id="editDate" value="${e.date}"></div>
-            <div class="form-group"><label>Amount</label><input type="number" id="editAmount" value="${e.amount}" step="0.01" min="0"></div>
-            <div class="form-group"><label>From</label><select id="editFrom">${fromOpts}</select></div>
-            <div class="form-group"><label>To</label><select id="editTo">${toOpts}</select></div>
-            <div class="form-group"><label>Fee</label><input type="number" id="editFee" value="${e.fee}" step="0.01" min="0"></div>
-            <div class="form-group"><label>Description</label><input type="text" id="editDesc" value="${e.description}"></div>`;
-    } else if (type === 'payable') {
-        const e = data.payables.find(x => x.id === id);
-        body = `
-            <div class="form-group"><label>Date</label><input type="date" id="editDate" value="${e.date}"></div>
-            <div class="form-group"><label>Amount</label><input type="number" id="editAmount" value="${e.amount}" step="0.01" min="0"></div>
-            <div class="form-group"><label>Description</label><input type="text" id="editDesc" value="${e.description}"></div>`;
+    editContext={type,id};
+    document.getElementById('editModalTitle').textContent='Edit Transaction';
+    let body='';
+    if (type==='expense') {
+        const e=data.expenses.find(x=>x.id===id);
+        const opts=data.accounts.map(a=>`<option value="${a.id}"${a.id===e.accountId?' selected':''}>${a.name}</option>`).join('');
+        body=`
+            <div class="form-group"><label>Date</label><input type="date" id="eDate" value="${e.date}"></div>
+            <div class="form-group"><label>Amount</label><input type="number" id="eAmt" value="${e.amount}" step="0.01" inputmode="decimal"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="eDesc" value="${e.description}"></div>
+            <div class="form-group"><label>Account</label><select id="eAcc">${opts}</select></div>`;
+    } else if (type==='income') {
+        const e=data.income.find(x=>x.id===id);
+        const opts=data.accounts.map(a=>`<option value="${a.id}"${a.id===e.accountId?' selected':''}>${a.name}</option>`).join('');
+        body=`
+            <div class="form-group"><label>Date</label><input type="date" id="eDate" value="${e.date}"></div>
+            <div class="form-group"><label>Amount</label><input type="number" id="eAmt" value="${e.amount}" step="0.01" inputmode="decimal"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="eDesc" value="${e.description}"></div>
+            <div class="form-group"><label>Account</label><select id="eAcc">${opts}</select></div>`;
+    } else if (type==='transfer') {
+        const e=data.transfers.find(x=>x.id===id);
+        const fOpts=data.accounts.map(a=>`<option value="${a.id}"${a.id===e.fromId?' selected':''}>${a.name}</option>`).join('');
+        const tOpts=data.accounts.map(a=>`<option value="${a.id}"${a.id===e.toId?' selected':''}>${a.name}</option>`).join('');
+        body=`
+            <div class="form-group"><label>Date</label><input type="date" id="eDate" value="${e.date}"></div>
+            <div class="form-group"><label>Amount</label><input type="number" id="eAmt" value="${e.amount}" step="0.01" inputmode="decimal"></div>
+            <div class="form-group"><label>From</label><select id="eFrom">${fOpts}</select></div>
+            <div class="form-group"><label>To</label><select id="eTo">${tOpts}</select></div>
+            <div class="form-group"><label>Fee</label><input type="number" id="eFee" value="${e.fee}" step="0.01" inputmode="decimal"></div>
+            <div class="form-group"><label>Notes</label><input type="text" id="eDesc" value="${e.description}"></div>`;
+    } else if (type==='payable') {
+        const e=data.payables.find(x=>x.id===id);
+        body=`
+            <div class="form-group"><label>Date</label><input type="date" id="eDate" value="${e.date}"></div>
+            <div class="form-group"><label>Amount</label><input type="number" id="eAmt" value="${e.amount}" step="0.01" inputmode="decimal"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="eDesc" value="${e.description}"></div>`;
     }
-    document.getElementById('editModalBody').innerHTML = body;
+    document.getElementById('editModalBody').innerHTML=body;
     document.getElementById('editModal').classList.add('active');
 }
 
-function closeEditModal() {
-    document.getElementById('editModal').classList.remove('active');
-    editContext = null;
-}
+function closeEditModal() { document.getElementById('editModal').classList.remove('active'); editContext=null; }
 
 function saveEdit() {
     if (!editContext) return;
-    const { type, id } = editContext;
+    const {type,id}=editContext;
 
-    if (type === 'pay') {
-        const accountId = parseInt(document.getElementById('payAccountSelect').value);
-        const acc = data.accounts.find(a => a.id === accountId);
-        const p = data.payables.find(p => p.id === id);
-        if (acc.amount < p.amount) { alert('Insufficient balance'); return; }
-        p.paid = true;
-        p.paidDate = new Date().toISOString().split('T')[0];
-        p.paidAccountId = accountId;
-        data.expenses.push({ id, date: p.paidDate, amount: p.amount, description: 'Paid: ' + p.description, accountId });
-        acc.amount -= p.amount;
+    if (type==='pay') {
+        const accId=parseInt(document.getElementById('payAccSelect').value);
+        const acc=data.accounts.find(a=>a.id===accId);
+        const p=data.payables.find(x=>x.id===id);
+        if (acc.amount<p.amount){alert('Insufficient balance');return;}
+        p.paid=true;
+        p.paidDate=new Date().toISOString().split('T')[0];
+        p.paidAccountId=accId;
+        data.expenses.push({id,date:p.paidDate,amount:p.amount,description:'Paid: '+p.description,accountId:accId});
+        acc.amount-=p.amount;
         saveData(); closeEditModal(); renderAll(); return;
     }
 
-    if (type === 'expense') {
-        const e = data.expenses.find(x => x.id === id);
-        // reverse old
-        data.accounts.find(a => a.id === e.accountId).amount += e.amount;
-        // apply new
-        e.date = document.getElementById('editDate').value;
-        e.amount = parseFloat(document.getElementById('editAmount').value) || e.amount;
-        e.description = document.getElementById('editDesc').value;
-        e.accountId = parseInt(document.getElementById('editAccount').value);
-        data.accounts.find(a => a.id === e.accountId).amount -= e.amount;
-    } else if (type === 'income') {
-        const e = data.income.find(x => x.id === id);
-        data.accounts.find(a => a.id === e.accountId).amount -= e.amount;
-        e.date = document.getElementById('editDate').value;
-        e.amount = parseFloat(document.getElementById('editAmount').value) || e.amount;
-        e.description = document.getElementById('editDesc').value;
-        e.accountId = parseInt(document.getElementById('editAccount').value);
-        data.accounts.find(a => a.id === e.accountId).amount += e.amount;
-    } else if (type === 'transfer') {
-        const e = data.transfers.find(x => x.id === id);
-        // reverse old
-        data.accounts.find(a => a.id === e.fromId).amount += (e.amount + e.fee);
-        data.accounts.find(a => a.id === e.toId).amount -= e.amount;
-        // apply new
-        e.date = document.getElementById('editDate').value;
-        e.amount = parseFloat(document.getElementById('editAmount').value) || e.amount;
-        e.fromId = parseInt(document.getElementById('editFrom').value);
-        e.toId   = parseInt(document.getElementById('editTo').value);
-        e.fee    = parseFloat(document.getElementById('editFee').value) || 0;
-        e.description = document.getElementById('editDesc').value;
-        data.accounts.find(a => a.id === e.fromId).amount -= (e.amount + e.fee);
-        data.accounts.find(a => a.id === e.toId).amount += e.amount;
-    } else if (type === 'payable') {
-        const e = data.payables.find(x => x.id === id);
-        e.date = document.getElementById('editDate').value;
-        e.amount = parseFloat(document.getElementById('editAmount').value) || e.amount;
-        e.description = document.getElementById('editDesc').value;
+    if (type==='expense') {
+        const e=data.expenses.find(x=>x.id===id);
+        data.accounts.find(a=>a.id===e.accountId).amount+=e.amount;
+        e.date=document.getElementById('eDate').value;
+        e.amount=parseFloat(document.getElementById('eAmt').value)||e.amount;
+        e.description=document.getElementById('eDesc').value;
+        e.accountId=parseInt(document.getElementById('eAcc').value);
+        data.accounts.find(a=>a.id===e.accountId).amount-=e.amount;
+    } else if (type==='income') {
+        const e=data.income.find(x=>x.id===id);
+        data.accounts.find(a=>a.id===e.accountId).amount-=e.amount;
+        e.date=document.getElementById('eDate').value;
+        e.amount=parseFloat(document.getElementById('eAmt').value)||e.amount;
+        e.description=document.getElementById('eDesc').value;
+        e.accountId=parseInt(document.getElementById('eAcc').value);
+        data.accounts.find(a=>a.id===e.accountId).amount+=e.amount;
+    } else if (type==='transfer') {
+        const e=data.transfers.find(x=>x.id===id);
+        data.accounts.find(a=>a.id===e.fromId).amount+=(e.amount+e.fee);
+        data.accounts.find(a=>a.id===e.toId).amount-=e.amount;
+        e.date=document.getElementById('eDate').value;
+        e.amount=parseFloat(document.getElementById('eAmt').value)||e.amount;
+        e.fromId=parseInt(document.getElementById('eFrom').value);
+        e.toId=parseInt(document.getElementById('eTo').value);
+        e.fee=parseFloat(document.getElementById('eFee').value)||0;
+        e.description=document.getElementById('eDesc').value;
+        data.accounts.find(a=>a.id===e.fromId).amount-=(e.amount+e.fee);
+        data.accounts.find(a=>a.id===e.toId).amount+=e.amount;
+    } else if (type==='payable') {
+        const e=data.payables.find(x=>x.id===id);
+        e.date=document.getElementById('eDate').value;
+        e.amount=parseFloat(document.getElementById('eAmt').value)||e.amount;
+        e.description=document.getElementById('eDesc').value;
     }
-
     saveData(); closeEditModal(); renderAll();
 }
 
 /* ── SUMMARY ── */
 function renderSummary() {
-    let total = 0;
-    data.accounts.forEach(a => total += a.amount);
-    document.getElementById('totalBalance').textContent = '₱' + total.toFixed(2);
+    let total=0; data.accounts.forEach(a=>total+=a.amount);
+    document.getElementById('totalBalance').textContent='₱'+total.toFixed(2);
     document.getElementById('accountsList').innerHTML = data.accounts.length
-        ? data.accounts.map(acc => `
-            <div class="account-item">
-                <div class="account-info">
-                    <div class="account-name">${acc.name}</div>
-                    <div class="account-amount">${acc.amount >= 0 ? '₱' : '-₱'}${Math.abs(acc.amount).toFixed(2)}</div>
-                </div>
+        ? data.accounts.map(a=>`
+            <div class="account-card">
+                <span class="name">${a.name}</span>
+                <span class="bal">${a.amount<0?'-':''}₱${Math.abs(a.amount).toFixed(2)}</span>
             </div>`).join('')
-        : '<p style="color:var(--text-secondary);text-align:center;font-size:0.82rem;">No accounts yet</p>';
+        : '<div class="empty-state"><div class="ei">🏦</div>No accounts yet</div>';
 }
 
 function renderAll() {
     renderSummary();
-    renderList('expenseList',  data.expenses,   'expense',  showAllState.expense);
-    renderList('incomeList',   data.income,     'income',   showAllState.income);
-    renderList('transferList', data.transfers,  'transfer', showAllState.transfer);
-    renderList('payableList',  data.payables,   'payable',  showAllState.payable);
+    renderList('expenseList',  data.expenses,  'expense');
+    renderList('incomeList',   data.income,    'income');
+    renderList('transferList', data.transfers, 'transfer');
+    renderList('payableList',  data.payables,  'payable');
 }
 
 document.getElementById('settingsBtn').addEventListener('click', openAccountModal);
